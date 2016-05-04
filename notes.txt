@@ -1,0 +1,4 @@
+We can create a hard-link to serve up the web pages from DSI:
+
+C:> cd C:\IBM\ODMInsights88\runtime\wlp\usr\servers\cisDev\dropins
+C:> mklink /j DSIExplorer.war "C:\Projects\ODMDSI\Projects\DSI Explorer\Mars WorkSpace\DSI Explorer\Webcontent"

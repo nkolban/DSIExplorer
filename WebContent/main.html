@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Template page</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.11/css/dataTables.jqueryui.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.1.2/css/select.jqueryui.min.css"/>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/dataTables.jqueryui.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
+<script type="text/javascript" src="src/DSIJMX.js"></script>
+<script type="text/javascript" src="src/DSIREST.js"></script>
+
+<script>
+$(function() {
+	// Do something here
+	document.oncontextmenu = function() {return false;};
+	var table = $('#solutions').DataTable({
+		"columns": [
+		   { data: "name", title: "Name" },
+		   { data: "version", title: "Version" }
+		],
+		select: 'single'
+	});
+	$("#stop").button().click(function() {
+		console.log("Stop! - selected: " + table.rows({selected: true}).count());
+		table.rows({selected: true}).every(function() {
+			console.log("Stopping: %O", this.data());
+			DSIJMX.stopSolution(this.data().name, function() {
+				refresh();
+			});
+		});
+	});
+	$("#activate").button().click(function() {
+		console.log("Activate! - selected: " + table.rows({selected: true}).count());
+		table.rows({selected: true}).every(function() {
+			console.log("Activating: %O", this.data());
+			DSIJMX.activateSolution(this.data().name+"-0.0", function() {
+				refresh();
+			});
+		});
+	});
+	$("#undeploy").button().click(function() {
+		console.log("Undeploy! - selected: " + table.rows({selected: true}).count());
+		table.rows({selected: true}).every(function() {
+			console.log("Undeploying: %O", this.data());
+			DSIJMX.undeploySolution(this.data().name + "-0.0", function() {
+				refresh();
+			});
+		});
+	});
+	$("#listEntities").button().click(function() {
+		console.log("listEntities! - selected: " + table.rows({selected: true}).count());
+		table.rows({selected: true}).every(function() {
+			DSIREST.listEntityTypes(this.data().name).done(function(entityTypes) {
+				console.log("Got entityTypes: %O", entityTypes);
+				$("#entityTypes").empty();
+				$.each(entityTypes.entityTypes, function(index, value) {
+					var option = $("<option></option>").attr("value", value).text(value);
+					$("#entityTypes").append(option);
+				});
+				$("#entityTypes").selectmenu("refresh");
+			});
+		});
+	});
+	$("#entityTypes").selectmenu();
+	$("#getEntities").button().click(function() {
+		var solution = getSelectedSolution();
+		if (solution == null) {
+			return;
+		}
+		var selectedEntityType = getSelectedEntityType();
+		debugger;
+	});
+	$("#refresh").button().click(function() {
+		refresh();
+	});
+	/*
+	$("#solutions tbody").on('click', 'tr', function() {
+		console.log("Clicked");
+		if ($(this).hasClass('selected')) {
+			$(this).removeClass('selected');
+		} else {
+			table.$('tr.selected').removeClass('selected');
+			$(this).addClass('selected');
+		}
+	});
+	*/
+	function refresh() {
+		DSIJMX.getSolutions(function(solutions) {
+			console.log("Solns=%O", solutions);
+			table.clear().rows.add(solutions).draw();
+		});
+	};
+	
+	function getSelectedSolution() {
+		selectedRows = table.rows({selected: true});
+		if (selectedRows.count() != 1) {
+			return null;
+		}
+		
+		var selectedSolution;
+		selectedRows.every(function() {
+			selectedSolution = this.data();
+		})
+		return selectedSolution;
+	}
+	
+	function getSelectedEntityType() {
+		return $("#entityTypes").val();
+	}
+	refresh();
+}); // End of on load
+</script>
+<!-- End AMD -->
+</head>
+<body>
+	<h1>DSI Explorer!</h1>
+	<button id="stop">Stop</button>
+	<button id="activate">Activate</button>
+	<button id="undeploy">Undeploy</button>
+	<button id="listEntities">List Entities</button>	
+	<button id="refresh">Refresh</button>			
+	<table id="solutions"></table>
+	<label for="entityTypes">Entity Types:</label>
+	<select id="entityTypes" style="width: 200px;">
+	</select>
+	<button id="getEntities">Get Entities</button>
+</body>
+</html>
