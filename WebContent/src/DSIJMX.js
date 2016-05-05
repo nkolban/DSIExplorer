@@ -1,7 +1,7 @@
-/**
- * http://usejsdoc.org/
- */
 var DSIJMX = (function() {
+	/**
+	 * @private
+	 */
 	function doJMX(path, callback, method, payload) {
 		if (method == null) {
 			method = "GET";
@@ -22,6 +22,11 @@ var DSIJMX = (function() {
 		});
 	}; // End of doJMX
 	
+	/**
+	 * Create a REST payload for JMX
+	 * @private
+	 * @param Parameters
+	 */
 	function toRESTJMXPayload(parameters) {
 		var ret = {
 			params: [],
@@ -37,7 +42,14 @@ var DSIJMX = (function() {
 		return JSON.stringify(ret);
 	}; // End of toRESTJMXPayload
 	
-	var module = {
+	return {
+		/**
+		 * @name DSIJMX#getSolutions
+		 * @function
+		 * @public
+		 * @memberOf dsi.DSIJMX
+		 * @description
+		 */
 		getSolutions: function(callback) {
 			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/attributes?attribute=Solutions", function(data){
 				var results = [];
@@ -51,6 +63,13 @@ var DSIJMX = (function() {
 			});
 		}, // End of getSolutions
 		
+		/**
+		 * @name DSIJMX#stopSolution
+		 * @function
+		 * @public
+		 * @memberOf dsi.DSIJMX
+		 * @description
+		 */
 		stopSolution: function(solutionName, callback) {
 			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/stopSolution", function(data) {
 				if (callback != null) {
@@ -59,6 +78,13 @@ var DSIJMX = (function() {
 			}, "POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of stopSolution
 		
+		/**
+		 * @name DSIJMX#activateSolution
+		 * @function
+		 * @public
+		 * @memberOf dsi.DSIJMX
+		 * @description
+		 */
 		activateSolution: function(solutionName, callback) {
 			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/activateSolution", function(data) {
 				if (callback != null) {
@@ -81,7 +107,39 @@ var DSIJMX = (function() {
 					callback();
 				}
 			}, "POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
-		} // End of undeploySolution
+		}, // End of undeploySolution
+		
+		/**
+		 * @name DSIJMX#listGlobalProperties
+		 * @function
+		 * @public
+		 * @description
+		 * @memberOf dsi.DSIJMX
+		 * @param {function} callback - The function to be called back.
+		 * Get a list of global properties.
+		 */
+		listGlobalProperties: function(callback) {
+			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/listProperties", function(data) {
+				if (callback != null) {
+					callback(data.value);
+				}
+			}, "POST", toRESTJMXPayload([]));
+		}, // End of listGlobalProperties
+		
+		/**
+		 * @name DSIJMX#getGlobalProperty
+		 * @function
+		 * @public
+		 * @memberOf dsi.DSIJMX
+		 * @description
+		 * Get a specific named global property.
+		 */
+		getGlobalProperty: function(propertyName, callback) {
+			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/getProperty", function(data) {
+				if (callback != null) {
+					callback();
+				}
+			}, "POST", toRESTJMXPayload([{ type: "String", value: propertyName }]));
+		} // End of getGlobalProperty
 	};
-	return module;
 })();

@@ -27,7 +27,7 @@ var DSIREST = (function(){
 			};
 		}
 		$.ajax(options); // End of $.ajax
-	} // End of _doRESTActual
+	}; // End of _doRESTActual
 
 	return {
 
@@ -55,11 +55,25 @@ var DSIREST = (function(){
 		/**
 		 * @private
 		 */
+		_doDELETE : function(url, data) {
+			return this._doREST("DELETE", url, data);
+		}, // End of _doDELETE
+		
+		/**
+		 * @private
+		 */
 		_doREST : function(command, url, data) {
 			var deferred = jQuery.Deferred();
 			_doRESTActual(command, url, data, deferred);
 			return deferred;
 		}, // End of _doREST
+		
+		/**
+		 * @public
+		 */
+		deleteEntity: function(solutionName, entityType, entityId) {
+			return this._doDELETE("/ibm/ia/rest/solutions/" + solutionName + "/entity-types/" + entityType + "/entities/" + entityId);
+		},
 		
 		/**
 		 * @public
@@ -76,12 +90,16 @@ var DSIREST = (function(){
 			return this._doGET("/ibm/ia/rest/solutions/" + solutionName + "/entity-types");
 		},
 		
+		/**
+		 * @name DSIREST#listSolutions
+		 * @returns
+		 */
 		listSolutions: function() {
 			return this._doGET("/ibm/ia/rest/solutions");
 		}, // End of listSolutions
 		
 		/**
-		 * @name dsi.DSIREST#setBaseURL
+		 * @name DSIREST#setBaseURL
 		 * @function
 		 * @public
 		 * @description
@@ -93,7 +111,7 @@ var DSIREST = (function(){
 		}, // End of setBaseURL
 		
 		/**
-		 * @name dsi.DSIREST#setCredentials
+		 * @name DSIREST#setCredentials
 		 * @function
 		 * @public
 		 * @description
