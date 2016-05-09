@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="ISO-8859-1">
-<title>Template page</title>
+<title>DSI Explorer</title>
 <!-- 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.css" rel="stylesheet" type="text/css" />
 -->
@@ -20,36 +20,65 @@
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/dataTables.jqueryui.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.0/jstree.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="lib/jQuery-File-Upload-9.12.3/css/jquery.fileupload.css" />
+<link rel="stylesheet" type="text/css" href="lib/jQuery-File-Upload-9.12.3/css/jquery.fileupload-ui.css" />
+<script src="lib/jQuery-File-Upload-9.12.3/js/jquery.iframe-transport.js"></script>
+<script src="lib/jQuery-File-Upload-9.12.3/js/jquery.fileupload.js"></script>
+
+<link rel="stylesheet" type="text/css" href="lib/jQuery-contextMenu/jquery.contextMenu.min.css" />
+<script src="lib/jQuery-contextMenu/jquery.contextMenu.min.js"></script>
+
+<script src="lib/layout/jquery.layout.min.js"></script>
+
+
 <script type="text/javascript" src="src/DSIJMX.js"></script>
 <script type="text/javascript" src="src/DSIREST.js"></script>
 <script type="text/javascript" src="src/main.js"></script>
 <!-- End AMD -->
 </head>
 <body>
-	<h1>DSI Explorer!</h1>
+	<div class="ui-layout-center">
 	<div id="tabs">
 		<ul>
-			<li><a href="#tab1">Entities</a></li>
-			<li><a href="#tab2">Global Properties</a></li>
+			<li><a href="#solutionsTab">Solutions</a></li>
+			<li><a href="#entitiesTab">Entities</a></li>
+			<li><a href="#eventsTabs">Events</a></li>			
+			<li><a href="#globalPropertiesTab">Global Properties</a></li>
 		</ul>
 
-		<div id="tab1">
+		<div id="solutionsTab">
 		
 			<table id="solutions"></table>
-			<label for="entityTypes">Entity Types:</label>
-			<select id="entityTypes" style="width: 200px;">
-			</select>
-			<button id="getEntities" class="dsi_enableOnSolution">Get Entities</button>
-			<div id="entitiesTree">
-			</div>
+			<p>
 			<button id="stop" class="dsi_enableOnSolution">Stop</button>
 			<button id="activate" class="dsi_enableOnSolution">Activate</button>
 			<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
 			<button id="refresh" class="dsi_enableOnSolution">Refresh</button>	
+			<input id="fileupload" type="file" name="thefile" data-url="/RestTest1/xxx/myPath">
+			</p>
 		</div>
-		<div id="tab2">
+		
+		<div id="eventsTabs">
+		Events
+		<br />
+			<textarea id="eventData" rows=10 style="width: 100%; max-width: 100%; font-family: 'courier new'"></textarea>
+			<button id="sendEvent">Send</button>
+		</div>
+		
+		<div id="entitiesTab">
+			<label for="entityTypes">Entity Types:</label>
+			<select id="entityTypes" style="width: 200px;"></select>
+			<button id="getEntities" class="dsi_enableOnSolution">Get Entities</button>
+			<div id="entitiesTree"></div>
+		</div>
+		<div id="globalPropertiesTab">
 			<table id="globalProperties"></table>
 		</div>
+	</div>
+	</div> <!-- End of layout center -->
+	<div class="ui-layout-south ui-widget ui-widget-content">
+	Selected solution: <span id="selectedSolutionLabel">None</span>, BOM loaded: <span id="bomLoadedLabel">No</span>
 	</div>
 </body>
 </html>

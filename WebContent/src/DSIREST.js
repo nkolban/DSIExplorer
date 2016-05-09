@@ -3,7 +3,7 @@ var DSIREST = (function(){
 	var baseURL = "https://localhost:9449";
 	// Userid and Password pair
 	var credentials = null;
-
+	
 	function _doRESTActual(command, url, data, deferred) {
 		var options = {
 			type : command,
@@ -28,6 +28,21 @@ var DSIREST = (function(){
 		}
 		$.ajax(options); // End of $.ajax
 	}; // End of _doRESTActual
+	
+	function _JSON2XML(eventJSON) {
+		var event = JSON.parse(eventJSON);
+		var eventName = event["$Name"].split(".")[1];
+		var eventXML = "<?xml version='1.0' encoding='UTF-8'?>" +
+		"<m:" + eventName + " xmlns:m='" + event["$Namespace"] + "' " +
+		"xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>";
+		$.each(event, function(propertyName, propertyValue) {
+			if (!propertyName.startsWith("$")) {
+				eventXML += "<m:" + propertyName + ">" + propertyValue + "</m:" + propertyName + ">";
+			}
+		});
+		eventXML += "</m:" + eventName + ">";
+		return eventXML;
+	}; // End of _JSON2XML
 
 	return {
 
@@ -42,7 +57,10 @@ var DSIREST = (function(){
 		 * @private
 		 */
 		_doPOST : function(url, options) {
-			return this._doREST("POST", url + "?" + $.param(options), null);
+			if (options != null) {
+				url += "?" + $.param(options)
+			}
+			return this._doREST("POST", url, null);
 		}, // End of _doPOST
 		
 		/**
@@ -122,6 +140,21 @@ var DSIREST = (function(){
 				userid : userid,
 				password : password
 			};
-		} // End of setCredentials			
+		}, // End of setCredentials
+		
+		/**
+		 * @name DSIREST#sendEvent
+		 * @description
+		 * Send an event to DSI.
+		 * @function
+		 * @param solution
+		 * @param event
+		 * @returns
+		 */
+		sendEvent: function(solution, event) {
+			debugger;
+			var xmlEvent = _JSON2XML(event);
+			return this._doPOST("/ibm/ia/gateway/" + solution, null, xmlEvent);
+		} // End of sendEvent
 	};
 })();

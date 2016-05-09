@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Upload Test</title>
+<!-- 
+<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+-->
+<link href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<!-- <script src="lib/js/vendor/jquery.ui.widget.js"></script> -->
+<script src="lib/jQuery-File-Upload-9.12.3/js/jquery.iframe-transport.js"></script>
+<script src="lib/jQuery-File-Upload-9.12.3/js/jquery.fileupload.js"></script>
+<script>
+$(function () {
+    $('#fileupload').fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+        	var parsedBOM = data.result;
+        	console.log("Parsed Bom: %O", parsedBOM);
+        }
+    });
+});
+</script>
+<!-- End AMD -->
+</head>
+<body>
+	<h1>Upload Test</h1>
+	<input id="fileupload" type="file" name="thefile" data-url="/RestTest1/xxx/myPath">
+</body>
+</html>
