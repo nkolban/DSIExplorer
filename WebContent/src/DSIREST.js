@@ -8,7 +8,6 @@ var DSIREST = (function(){
 		var options = {
 			type : command,
 			url : baseURL + url,
-			data : data,
 			dataType: "json",
 			context : this,
 			success : function(data) {
@@ -17,10 +16,25 @@ var DSIREST = (function(){
 			error : function(jqXHR, textStatus, errorThrown) {
 				deferred.reject({
 					status: jqXHR.status,
-					statusText: jqXHR.statusText
+					statusText: jqXHR.statusText,
+					responseJSON: jqXHR.responseJSON 
 				});
 			} // End of Error
 		};
+		// Handle any passed data.  It may be either, null, a string or an object.  If an object then that object will
+		// be of the format:
+		// {
+		//   data: <The data to send>,
+		//   contentType: <The MINE content type> (eg. application/json or application/xml)
+		// }
+		if (data != null) {
+			if (typeof data == "object") {
+				options.data = data.data;
+				options.contentType = data.contentType;
+			} else {
+				options.data = data;
+			}
+		}
 		if (credentials && credentials.userid && credentials.password) {
 			options.headers = {
 				"Authorization" : "Basic " + $.base64.btoa(credentials.userid + ":" + credentials.password)
@@ -56,11 +70,11 @@ var DSIREST = (function(){
 		/**
 		 * @private
 		 */
-		_doPOST : function(url, options) {
+		_doPOST : function(url, options, data) {
 			if (options != null) {
 				url += "?" + $.param(options)
 			}
-			return this._doREST("POST", url, null);
+			return this._doREST("POST", url, data);
 		}, // End of _doPOST
 		
 		/**
@@ -152,8 +166,10 @@ var DSIREST = (function(){
 		 * @returns
 		 */
 		sendEvent: function(solution, event) {
-			debugger;
-			var xmlEvent = _JSON2XML(event);
+			var xmlEvent = {
+				data: _JSON2XML(event),
+				contentType: "application/xml"
+			};
 			return this._doPOST("/ibm/ia/gateway/" + solution, null, xmlEvent);
 		} // End of sendEvent
 	};

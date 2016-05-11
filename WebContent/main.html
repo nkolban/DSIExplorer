@@ -35,6 +35,11 @@
 <script type="text/javascript" src="src/DSIJMX.js"></script>
 <script type="text/javascript" src="src/DSIREST.js"></script>
 <script type="text/javascript" src="src/main.js"></script>
+<style>
+.ui-selectmenu-button {
+	vertical-align: middle;
+}
+</style>
 <!-- End AMD -->
 </head>
 <body>
@@ -45,6 +50,7 @@
 			<li><a href="#entitiesTab">Entities</a></li>
 			<li><a href="#eventsTabs">Events</a></li>			
 			<li><a href="#globalPropertiesTab">Global Properties</a></li>
+			<li><a href="#debuggingTab">Debugging</a></li>
 		</ul>
 
 		<div id="solutionsTab">
@@ -64,21 +70,59 @@
 		<br />
 			<textarea id="eventData" rows=10 style="width: 100%; max-width: 100%; font-family: 'courier new'"></textarea>
 			<button id="sendEvent">Send</button>
+			<button id="eventHistory">History</button>
+			<button id="eventSaveButton">Save</button>
+			<button id="eventLoadButton">Load</button>
 		</div>
 		
 		<div id="entitiesTab">
 			<label for="entityTypes">Entity Types:</label>
 			<select id="entityTypes" style="width: 200px;"></select>
 			<button id="getEntities" class="dsi_enableOnSolution">Get Entities</button>
+			<p>
+				<button id="collapseAll">Collapse all</button>
+				<button id="expandAll">Expand all</button>
+			</p>
 			<div id="entitiesTree"></div>
+			<table id="entitiesTable"></table>
+
 		</div>
+		
 		<div id="globalPropertiesTab">
 			<table id="globalProperties"></table>
+		</div>
+		
+		<div id="debuggingTab">
+		<p>This page contains debugging controls used during development of DSI Explorer.  This page will
+		not be shown in non-development distributions</p>
+			<button id="clearLocalStorage">Clear Local Storage</button> - Clear the local storage for the application.
 		</div>
 	</div>
 	</div> <!-- End of layout center -->
 	<div class="ui-layout-south ui-widget ui-widget-content">
 	Selected solution: <span id="selectedSolutionLabel">None</span>, BOM loaded: <span id="bomLoadedLabel">No</span>
+	</div>
+	<!-- Dialogs -->
+	<div id="confirmReplace">
+		<p>Confirm replacement of existing event data.</p>
+	</div>
+	
+	<div id="eventHistoryDialog">
+		<table id="eventHistoryTable"></table>
+	</div>
+	<div id="saveEventDialog">
+		<span>Name: &nbsp;</span><input type="text" id="saveEventName">
+	</div>
+	<div id="loadEventDialog">
+		<div id="loadEventDialog_Table">
+			<table id="savedEventsTable"></table>
+		</div>
+		<div id="loadEventDialog_TableNoData">
+			No saved events.
+		</div>
+	</div>
+	<div id="errorDialog">
+		<span id="errorMessage"></span>
 	</div>
 </body>
 </html>
