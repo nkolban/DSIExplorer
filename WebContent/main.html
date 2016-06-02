@@ -32,12 +32,29 @@
 <script src="lib/layout/jquery.layout.min.js"></script>
 
 
+<script type="text/javascript" src="//maps.google.com/maps/api/js"></script>
+<script type="text/javascript" src="lib/gmaps/gmaps.js"></script>
+
+
 <script type="text/javascript" src="src/DSIJMX.js"></script>
 <script type="text/javascript" src="src/DSIREST.js"></script>
 <script type="text/javascript" src="src/main.js"></script>
 <style>
 .ui-selectmenu-button {
 	vertical-align: middle;
+}
+
+.myBorder {
+	border-width: 1px;
+	border-style: solid;
+	padding: 10px;
+}
+
+.myHide {
+	display: inline-block;
+	visibility: hidden;
+	width: 0;
+	height: 0;
 }
 </style>
 <!-- End AMD -->
@@ -50,9 +67,14 @@
 			<li><a href="#entitiesTab">Entities</a></li>
 			<li><a href="#eventsTabs">Events</a></li>			
 			<li><a href="#globalPropertiesTab">Global Properties</a></li>
+			<li><a href="#mapTab">Map</a>
 			<li><a href="#debuggingTab">Debugging</a></li>
 		</ul>
+<!--
 
+*** SOLUTIONS ***
+
+-->	
 		<div id="solutionsTab">
 		
 			<table id="solutions"></table>
@@ -61,10 +83,15 @@
 			<button id="activate" class="dsi_enableOnSolution">Activate</button>
 			<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
 			<button id="refresh" class="dsi_enableOnSolution">Refresh</button>	
-			<input id="fileupload" type="file" name="thefile" data-url="/RestTest1/xxx/myPath">
+			<input id="bomFileUpload" type="file" name="thefile" data-url="/RestTest1/xxx/myPath" class="myHide">
+			<button id="bomFileUploadButton" class="dsi_enableOnSolution">BOM Select</button>
 			</p>
 		</div>
-		
+<!--
+
+*** EVENTS ***
+
+-->			
 		<div id="eventsTabs">
 		Events
 		<br />
@@ -74,24 +101,50 @@
 			<button id="eventSaveButton">Save</button>
 			<button id="eventLoadButton">Load</button>
 		</div>
-		
+<!--
+
+*** ENTITIES ***
+
+-->		
 		<div id="entitiesTab">
 			<label for="entityTypes">Entity Types:</label>
 			<select id="entityTypes" style="width: 200px;"></select>
 			<button id="getEntities" class="dsi_enableOnSolution">Get Entities</button>
+			<button id="deleteAllEntities">Delete All</button>
 			<p>
 				<button id="collapseAll">Collapse all</button>
 				<button id="expandAll">Expand all</button>
 			</p>
-			<div id="entitiesTree"></div>
-			<table id="entitiesTable"></table>
+			<div class="myBorder" style="margin-bottom: 10px; background-color: white;">
+				<div id="entitiesTree"></div>
+			</div>
+			<div id="entitiesTableDiv">
+			</div>
+			<!-- <table id="entitiesTable"></table> -->
 
 		</div>
-		
+<!--
+
+*** GLOBAL PROPERTIES ***
+
+-->			
 		<div id="globalPropertiesTab">
 			<table id="globalProperties"></table>
 		</div>
-		
+
+<!--
+
+*** MAP ***
+
+-->	
+		<div id="mapTab" >
+			<div id="map"></div>
+		</div>
+<!--
+
+*** DEBUGGING ***
+
+-->			
 		<div id="debuggingTab">
 		<p>This page contains debugging controls used during development of DSI Explorer.  This page will
 		not be shown in non-development distributions</p>
@@ -99,7 +152,7 @@
 		</div>
 	</div>
 	</div> <!-- End of layout center -->
-	<div class="ui-layout-south ui-widget ui-widget-content">
+	<div class="ui-layout-south ui-widget ui-widget-content" style="text-align: right;">
 	Selected solution: <span id="selectedSolutionLabel">None</span>, BOM loaded: <span id="bomLoadedLabel">No</span>
 	</div>
 	<!-- Dialogs -->

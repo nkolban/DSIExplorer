@@ -2,3 +2,28 @@ We can create a hard-link to serve up the web pages from DSI:
 
 C:> cd C:\IBM\ODMInsights88\runtime\wlp\usr\servers\cisDev\dropins
 C:> mklink /j DSIExplorer.war "C:\Projects\ODMDSI\Projects\DSI Explorer\Mars WorkSpace\DSI Explorer\Webcontent"
+
+To launch the app we visit:
+
+https://<server>:port/DSIExplorer/main.html
+https://localhost:9449/DSIExplorer/main.html
+
+Make sure to have the Server in the trusted SSL list by visiting:
+
+https://localhost:9449/ibm/insights/home
+
+
+Sample event:
+
+{
+  "numericField": "123",
+  "id": "My String",
+  "stringField": "java.lang.String",
+  "$Namespace": "http://www.ibm.com/ia/xmlns/default/DSIExplorerTests_BOM/model",
+  "$Name": "explorer.Event1"
+}
+
+
+Packages used
+jQuery-contextMenu
+jQuery-File-Upload - https://github.com/blueimp/jQuery-File-Upload

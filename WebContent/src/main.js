@@ -47,6 +47,22 @@ $(function() {
 	/**
 	 * @memberOf main
 	 */
+	var gmap;
+	
+	/**
+	 * @memberOf main
+	 * @description
+	 * The description of the entities and events for this solution
+	 * {
+	 *   entities: [
+	 *   {
+	 *     $IdAttrib:
+	 *     $Name:
+	 *     <field>:
+	 *   }, ...];
+	 *   events: []
+	 * }
+	 */
 	var bomModel = null;
 	
 	
@@ -62,7 +78,15 @@ $(function() {
 	
 	document.oncontextmenu = function() {return false;};
 	
-	$("#tabs").tabs({disabled: [ entitiesTabIndex, eventsTabIndex]});
+	$("#tabs").tabs({
+		disabled: [ entitiesTabIndex, eventsTabIndex],
+		activate: function(event, ui) {
+			var id = ui.newPanel.attr('id');
+			if (id == "mapTab") {
+				gmap.refresh();
+			}
+		}
+	});
 
     
     initGeneral();
@@ -70,6 +94,8 @@ $(function() {
     initEventSaveLoad();
     initEventsTab();
     initSolutionsTab();
+    initGlobalPropertiesTab();
+    initMapTab();
     
     // Debugging page
     // Clear local storage
@@ -106,7 +132,7 @@ $(function() {
 			if (!name.startsWith("$")) {
 				entityNode.children.push({
 					icon: "images/field.png",
-					text:  name + ": " + propertyValue,
+					text:  name + ": " + propertyToString(propertyValue),
 					state: {opened: true},
 					children: []
 				});
@@ -179,7 +205,7 @@ $(function() {
 	 * @private
 	 * @memberOf main
 	 */
-	function refresh() {
+	function refreshSolutions() {
 		DSIJMX.getSolutions(function(solutions) {
 			console.log("Solns=%O", solutions);
 			$('#solutions').DataTable().clear().rows.add(solutions).draw();
@@ -220,6 +246,28 @@ $(function() {
 	function getSelectedEntityType() {
 		return $("#entityTypes").val();
 	}; // End of getSelectedEntityTypes
+
+
+	/**
+	 * @function
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Find the entity model for the named entity type or null if not present.
+	 */
+	function getModelFromEntityType(entityType) {
+		if (bomModel == null) {
+			return null;
+		}
+		var foundModel = null;
+		$.each(bomModel.entities, function(index, entityModel){
+			if (entityModel["$Name"] == entityType) {
+				foundModel = entityModel;
+				return false;
+			}
+		});
+		return foundModel;
+	}; // End of getModelFromEntityType
 
 
 	/**
@@ -356,6 +404,24 @@ $(function() {
 	}; // End of generalInit
 	
 	
+	/**
+	 * @function
+	 * @private
+	 * @memberOf main
+	 */
+	function initGlobalPropertiesTab() {
+		$('#globalProperties').DataTable({
+			autoWidth: false,
+			searching: false,
+			paging: false,
+			info: false,
+			select: 'single',
+			"columns": [
+			   { data: "name",  title: "Name" },
+			   { data: "value", title: "Value" }
+			]
+		});
+	}; // End of initGlobalProperties
 	
 	/**
 	 * @function
@@ -363,6 +429,8 @@ $(function() {
 	 * @memberOf main
 	 */
 	function initSolutionsTab() {
+
+// Define the structure and options of the solutions table
 		var table = $('#solutions').DataTable({
 			autoWidth: false,
 			searching: false,
@@ -393,92 +461,165 @@ $(function() {
 			$("#bomLoadedLabel").text("None");
 		});
 		
-		$('#globalProperties').DataTable({
-			autoWidth: false,
-			searching: false,
-			paging: false,
-			info: false,
-			select: 'single',
-			"columns": [
-			   { data: "name",  title: "Name" },
-			   { data: "value", title: "Value" }
-			]
-		});
-		
-		$("#stop").button().click(function() {
+// Handle the user clicking the stop button to stop a solution.
+		$("#stop").button({
+			icons: {primary: "ui-icon-stop"}
+		}).click(function() {
 			console.log("Stop! - selected: " + table.rows({selected: true}).count());
 			table.rows({selected: true}).every(function() {
 				console.log("Stopping: %O", this.data());
 				DSIJMX.stopSolution(this.data().name, function() {
-					refresh();
+					refreshSolutions();
 				});
 			});
 		}); // End of stop button
 
 		
-		$("#activate").button().click(function() {
+// Handle the user clicking the activate button to activate a solution		
+		$("#activate").button({
+			icons: {primary: "ui-icon-play"}
+		}).click(function() {
 			console.log("Activate! - selected: " + table.rows({selected: true}).count());
 			table.rows({selected: true}).every(function() {
 				console.log("Activating: %O", this.data());
 				DSIJMX.activateSolution(this.data().name+"-0.0", function() {
-					refresh();
+					refreshSolutions();
 				});
 			});
 		}); // End of activate button
 
-		
-		$("#undeploy").button().click(function() {
+// Handle the user clicking the undeploy button to undeploy a solution		
+		$("#undeploy").button({
+			icons: {primary: "ui-icon-eject"}
+		}).click(function() {
 			console.log("Undeploy! - selected: " + table.rows({selected: true}).count());
 			table.rows({selected: true}).every(function() {
 				console.log("Undeploying: %O", this.data());
 				DSIJMX.undeploySolution(this.data().name + "-0.0", function() {
-					refresh();
+					refreshSolutions();
 				});
 			});
 		});
-		
-		$("#refresh").button().click(function() {
-			refresh();
-		});
 
+// Handle the user clicking the refresh button to refresh the solutions		
+		$("#refresh").button({
+			icons: {primary: "ui-icon-refresh"}
+		}).click(function() {
+			refreshSolutions();
+		});
 		
-		$(".dsi_enableOnSolution").button("option", "disabled", true);
-		
-	    $('#fileupload').fileupload({
+// Create the fileupload control		
+	    $('#bomFileUpload').fileupload({
 	        dataType: 'json',
+	        "url": "/RestTest1/xxx/myPath",
 	        done: function (e, data) {
 	        	bomModel = data.result;
 	        	console.log("Parsed Bom: %O", bomModel);
 	        	$("#bomLoadedLabel").text("Yes");
 	        }
 	    });
+
+// Handle the user clicking the file upload button	   
+	    $("#bomFileUploadButton").button({
+			icons: {primary: "ui-icon-document"}
+		}).click(function() {
+	    	$("#bomFileUpload").click();
+	    });
+	    
+	    // MUST BE LAST THING DONE IN INITIALIZATION
+		$(".dsi_enableOnSolution").button("option", "disabled", true);
 	}; // End of initSolutionsTab
 	
 	/**
 	 * @function
 	 * @private
 	 * @memberOf main
+	 * @description
+	 * Initialize the entities tab.
 	 */
 	function initEntitiesTab() {
 		$("#entityTypes").selectmenu();
 		
-		$("#getEntities").button().click(function() {
+		var refreshEntities = function() {
 			var solution = getSelectedSolution();
 			if (solution == null) {
 				return;
 			}
 			var selectedEntityType = getSelectedEntityType();
+			var entityModel = getModelFromEntityType(selectedEntityType);
+			if (entityModel != null) {
+				// Create the dynamic columns used to show the data.
+				var columns = [];
+				
+				// A function used to render a column's data if it is not a simple type
+				var renderColumn = function(data, type, row, meta) {
+					return propertyToString(data);
+				};
+				
+				// Iterate over each of the properties in the entity model.  Each property could be
+				// a column of data in the resulting table.  Columns which start with "$" are off limits
+				// and used as meta data such as describing the data type of the entity or which
+				// entity is the attribute.
+				$.each(entityModel, function(propertyName, propertyValue) {
+					if (!propertyName.startsWith("$")) {
+						var newColumn = {
+							title: propertyName,
+							data: propertyName
+						};
+						if (propertyValue == "com.ibm.geolib.geom.Point") {
+							newColumn.render = renderColumn;
+						}
+						columns.push(newColumn);
+					}
+				});
+				
+				//$("#entitiesTable").DataTable("option", "columns", columns);
+				$("#entitiesTable").remove();
+				$("#entitiesTable_wrapper").remove();
+				$("#entitiesTableDiv").append("<table id='entitiesTable'></table>");
+				$("#entitiesTable").DataTable({
+					autoWidth: false,
+					searching: false,
+					paging: false,
+					info: false,
+					"columns": columns,
+					select: 'single'
+				}); // End of #entitiesTable - DataTable constructor
+			}
+			
+			// Ask DSI for the list of entities.
 			DSIREST.listEntityInstances(solution.name, selectedEntityType).done(function(data){
 				entitiesToTree(data);
+				if (data != null) {
+					$("#entitiesTable").DataTable().rows.add(data.entities).draw();
+				}
 			});
+		}; // End of refreshEntities()
+		
+		// Handle a request to get/refresh the list of entities.
+		$("#getEntities").button().click(refreshEntities);
+		
+		// Handle a request to elete all the entities.
+		$("#deleteAllEntities").button().click(function() {
+			var solution = getSelectedSolution();
+			if (solution == null) {
+				return;
+			}
+			DSIREST.deleteAllEntities(solution.name, getSelectedEntityType());
+			refreshEntities();
 		});
 		
+		// Collapse all entries in the tree
 		$("#collapseAll").button().click(function() {
 			$("#entitiesTree").jstree(true).close_all();
 		});
+		
+		// Expand all entries in the tree
 		$("#expandAll").button().click(function() {
 			$("#entitiesTree").jstree(true).open_all();
 		});
+		
+		// Create the tree
 		$("#entitiesTree").jstree({
 			core: {
 				"animation":      false,
@@ -542,6 +683,7 @@ $(function() {
 			plugins: ["contextmenu"]
 		}); // End of jstree initialization
 		
+		/*
 		// Create a DataTable for showing the entities.
 		$("#entitiesTable").DataTable({
 			autoWidth: false,
@@ -557,6 +699,7 @@ $(function() {
 			],
 			select: 'single'
 		}); // End of #entitiesTable - DataTable constructor
+		*/
 	}; // End of initEntitiesTab
 
 
@@ -654,6 +797,22 @@ $(function() {
 	    	}
 	    }); // End of context menu for event data text area.
 	}; // End of initEventsTab
+	
+	/**
+	 * @function
+	 * @private
+	 * @function
+	 * @memberOf main
+	 */
+	function initMapTab() {
+		gmap = new GMaps({
+			div: "#map",
+			width: "100%",
+			height: "500px",
+	        lat: -12.043333,
+	        lng: -77.028333
+		});
+	}; // End of initMapTab
 	
 	/**
 	 * @private
@@ -815,5 +974,38 @@ $(function() {
 		$("#errorDialog").dialog("open");
 	};
 	
-	refresh();
+	
+	/**
+	 * Convert a property returned from a REST call to a string.
+	 * @private
+	 * @memberOf main
+	 */
+	function propertyToString(property) {
+		if (typeof property == "number") {
+			return String(property);
+		}
+		if (typeof property == "string") {
+			return property;
+		}
+		if (typeof property == "boolean") {
+			return String(property);
+		}
+		if (typeof property == "object") {
+			if (property.hasOwnProperty("$class")) {
+				if (property["$class"] == "Point") {
+					return "Point(" + property.coordinates[1] + "," + property.coordinates[0] + ")";
+				}
+			}
+				/*
+			    "location" : {
+			        "$class" : "Point",
+			        "coordinates" : [30.0, 50.0]
+			      },
+			    */
+			return "Unknown Object: " + property["$class"];
+		}
+		return "Unknown type";
+	}
+	
+	refreshSolutions();
 }); // End of on load

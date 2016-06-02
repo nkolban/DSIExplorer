@@ -110,6 +110,13 @@ var DSIREST = (function(){
 		/**
 		 * @public
 		 */
+		deleteAllEntities: function(solutionName, entityType) {
+			return this._doDELETE("/ibm/ia/rest/solutions/" + solutionName + "/entity-types/" + entityType + "/entities");
+		},
+		
+		/**
+		 * @public
+		 */
 		getEntity: function(solutionName, entityType, entityId) {
 			return this._doGET("/ibm/ia/rest/solutions/" + solutionName + "/entity-types/" + entityType + "/entities/" + entityId);
 		}, // End of getEntity
