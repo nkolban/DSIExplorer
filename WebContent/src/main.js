@@ -1,10 +1,11 @@
 /**
- * @module foobar
+ * @module DSIExplorer
  */
 
 /**
  * The table widget used in the project is dataTables (https://datatables.net/)
- * The file loader widget used in the project is (https://blueimp.github.io/jQuery-File-Upload/)
+ * The file loader widget used in the project is jqeury-fileupload (https://blueimp.github.io/jQuery-File-Upload/)
+ * The mapping package used in this project is gmaps.js (https://hpneo.github.io/gmaps/)
  */
 
 /**
@@ -46,9 +47,11 @@ $(function() {
 	
 	/**
 	 * @memberOf main
+	 * @description
+	 * The map object.  See gmaps.js package.
 	 */
 	var gmap;
-	
+
 	/**
 	 * @memberOf main
 	 * @description
@@ -63,8 +66,8 @@ $(function() {
 	 *   events: []
 	 * }
 	 */
-	var bomModel = null;
-	
+	var bomModels = {};
+	loadBOMModels();
 	
 	Storage.prototype.setObject = function(key, value) {
 	    this.setItem(key, JSON.stringify(value));
@@ -74,11 +77,22 @@ $(function() {
 	    var value = this.getItem(key);
 	    return value && JSON.parse(value);
 	};
-	$('body').layout();
+	
+	// Initialize the body of the page for the jQuery UI Layout control
+	$('body').layout({
+		south__resizable: false,
+		south__closable: false,
+		center__onresize: function() {
+			console.log("center resized!");
+			$("#tabs").tabs("refresh");
+		}
+	});
 	
 	document.oncontextmenu = function() {return false;};
 	
+	// Create the tabs on the page.
 	$("#tabs").tabs({
+		"heightStyle": "fill",
 		disabled: [ entitiesTabIndex, eventsTabIndex],
 		activate: function(event, ui) {
 			var id = ui.newPanel.attr('id');
@@ -87,8 +101,16 @@ $(function() {
 			}
 		}
 	});
+	
+	/*
+	$(window).resize(function() {
+		$("#tabs").tabs("refresh");
+	});
+	*/
 
-    
+    // Initialize all the content of each of the tabs.  We can potentially
+	// improve our performance (if it becomes an issue) by lazy initialization
+	// such that the first time a tab is shown, we initialize it.
     initGeneral();
     initEntitiesTab();
     initEventSaveLoad();
@@ -102,15 +124,6 @@ $(function() {
     $("#clearLocalStorage").button().click(function() {
     	localStorage.clear();
     });
-	
-	DSIJMX.listGlobalProperties(function(data) {
-		var values = [];
-		$.each(data, function(index, propertyName) {
-			values.push({ name: propertyName, value: "XXX"});
-		});
-		$('#globalProperties').DataTable().clear().rows.add(values).draw();
-	});
-
 
 	/**
 	 * @private
@@ -139,7 +152,7 @@ $(function() {
 			}
 		}); // End of iteration over each of the members of the current entity
 		return  entityNode;
-	};
+	}; // End of entityToTreeNode
 
 
 	/**
@@ -183,19 +196,25 @@ $(function() {
 	 * Update the entity types for the selected solution.
 	 */
 	function updateEntityTypes() {
+		// Entity types that are to be displayed are a function of the current solution so
+		// if we have no solution selected then there is nothing to do.
 		var selectedSolution = getSelectedSolution();
 		if (selectedSolution == null) {
 			return;
 		}
 		
+		// Since we have reloaded the entity types, there will be none selected so disable
+		// any commands that rely on the entity types being enabled.
+		$(".dsi_enableOnEntityType").button("option", "disabled", true);
+		
+		// Get the list of entity types from the server for the current solution.
 		DSIREST.listEntityTypes(selectedSolution.name).done(function(entityTypes) {
-			console.log("Got entityTypes: %O", entityTypes);
-			$("#entityTypes").empty();
+			//console.log("Got entityTypes: %O", entityTypes);
+			var listBox = $("#entityTypesList");
+			listBox.empty();
 			$.each(entityTypes.entityTypes, function(index, value) {
-				var option = $("<option></option>").attr("value", value).text(value);
-				$("#entityTypes").append(option);
+				listBox.append($("<option>", {value: value, text: value}));
 			});
-			$("#entityTypes").selectmenu("refresh");
 		});
 	}; // End of updateEntityTypes
 
@@ -216,9 +235,19 @@ $(function() {
 	/**
 	 * @private
 	 * @memberOf main
+	 * @description
+	 * Get the currently selected solution.  If no solution is selected, then null is returned.
+	 * A solution object contains two properties:
+	 * <ul>
+	 * <li><b>name</b> - The name of the solution.</li>
+	 * <li><b>version</b> - The version of the solution.</li>
+	 * </ul>
 	 */
 	function getSelectedSolution() {
 		var selectedRow = $("#solutions").DataTable().row({selected: true});
+		if (selectedRow == null) {
+			return null;
+		}
 		return selectedRow.data();
 	}; // End of getSelectedSolution
 
@@ -244,7 +273,7 @@ $(function() {
 	 * Get the current selected entity type.
 	 */
 	function getSelectedEntityType() {
-		return $("#entityTypes").val();
+		return $("#entityTypesList option:selected").val();
 	}; // End of getSelectedEntityTypes
 
 
@@ -254,8 +283,15 @@ $(function() {
 	 * @memberOf main
 	 * @description
 	 * Find the entity model for the named entity type or null if not present.
+	 * A model entity is of the following structure:
+	 * <ul>
+	 * <li><b>$IdAttrib</b> - The attribute that is the key of the entity.</li>
+	 * <li><b>$Name</b> - The name of the entity type.</li>
+	 * <li><b>... properties ...</b> - The value of the specific property.</li>
+	 * </ul>
 	 */
 	function getModelFromEntityType(entityType) {
+		var bomModel = getSolutionModel();
 		if (bomModel == null) {
 			return null;
 		}
@@ -269,13 +305,16 @@ $(function() {
 		return foundModel;
 	}; // End of getModelFromEntityType
 
+	
 
+	
 	/**
 	 * @function
 	 * @private
 	 * @memberOf main
 	 */
 	function getEventByName(name) {
+		var bomModel = getSolutionModel();
 		if (bomModel == null) {
 			return null;
 		}
@@ -380,7 +419,7 @@ $(function() {
 			currentData.splice(foundIndex, 1);
 			localStorage.setObject("savedEvents", currentData);
 		}
-	};
+	}; // End of deleteSavedEvent
 	
 	/**
 	 * @function
@@ -413,6 +452,7 @@ $(function() {
 		$('#globalProperties').DataTable({
 			autoWidth: false,
 			searching: false,
+			scrollY: "400px",
 			paging: false,
 			info: false,
 			select: 'single',
@@ -420,6 +460,13 @@ $(function() {
 			   { data: "name",  title: "Name" },
 			   { data: "value", title: "Value" }
 			]
+		});
+		DSIJMX.listGlobalProperties(function(data) {
+			var values = [];
+			$.each(data, function(index, propertyName) {
+				values.push({ name: propertyName, value: "XXX"});
+			});
+			$('#globalProperties').DataTable().clear().rows.add(values).draw();
 		});
 	}; // End of initGlobalProperties
 	
@@ -434,6 +481,7 @@ $(function() {
 		var table = $('#solutions').DataTable({
 			autoWidth: false,
 			searching: false,
+			scrollY: "500px",
 			paging: false,
 			info: false,
 			"columns": [
@@ -451,14 +499,16 @@ $(function() {
 			$(".dsi_enableOnSolution").button("option", "disabled", false);
 			$("#tabs").tabs("option", "disabled", []);
 			$("#selectedSolutionLabel").text(getSelectedSolution().name);
+			resetMapTab();
+			var bomModel = getSolutionModel(getSelectedSolution().name);
+			$("#bomLoadedLabel").text(bomModel!=null?"Yes":"No");
 		}); // End of solution selection changed.
 		
 		table.on('deselect', function(e, dt, type, indexes) {
 			$(".dsi_enableOnSolution").button("option", "disabled", true);
 			$("#tabs").tabs("option", "disabled", [entitiesTabIndex, eventsTabIndex]);
 			$("#selectedSolutionLabel").text("None");
-			bomModel = null;
-			$("#bomLoadedLabel").text("None");
+			$("#bomLoadedLabel").text("Nonde");
 		});
 		
 // Handle the user clicking the stop button to stop a solution.
@@ -511,10 +561,13 @@ $(function() {
 // Create the fileupload control		
 	    $('#bomFileUpload').fileupload({
 	        dataType: 'json',
-	        "url": "/RestTest1/xxx/myPath",
+	        "url": "/DSI_REST_Utils/xxx/myPath",
 	        done: function (e, data) {
-	        	bomModel = data.result;
-	        	console.log("Parsed Bom: %O", bomModel);
+	        	var selectedSolution = getSelectedSolution();
+	        	if (selectedSolution == null) {
+	        		return;
+	        	}
+	        	setSolutionModel(selectedSolution.name, data.result);
 	        	$("#bomLoadedLabel").text("Yes");
 	        }
 	    });
@@ -538,8 +591,6 @@ $(function() {
 	 * Initialize the entities tab.
 	 */
 	function initEntitiesTab() {
-		$("#entityTypes").selectmenu();
-		
 		var refreshEntities = function() {
 			var solution = getSelectedSolution();
 			if (solution == null) {
@@ -580,7 +631,7 @@ $(function() {
 				$("#entitiesTable").DataTable({
 					autoWidth: false,
 					searching: false,
-					paging: false,
+					paging: true,
 					info: false,
 					"columns": columns,
 					select: 'single'
@@ -597,7 +648,12 @@ $(function() {
 		}; // End of refreshEntities()
 		
 		// Handle a request to get/refresh the list of entities.
-		$("#getEntities").button().click(refreshEntities);
+		$("#getEntities").button().click(refreshEntities).width("7em");
+		
+		$("#entityTypesList").change(function(){
+			console.log("Entities list changed!");
+			$(".dsi_enableOnEntityType").button("option", "disabled", false);
+		});
 		
 		// Handle a request to elete all the entities.
 		$("#deleteAllEntities").button().click(function() {
@@ -607,7 +663,7 @@ $(function() {
 			}
 			DSIREST.deleteAllEntities(solution.name, getSelectedEntityType());
 			refreshEntities();
-		});
+		}).width("7em");
 		
 		// Collapse all entries in the tree
 		$("#collapseAll").button().click(function() {
@@ -760,6 +816,7 @@ $(function() {
 	    	selector: "#eventData",
 	    	autoHide: true, // Should the menu disappear when the mouse moves out of the trigger area.
 	    	build: function(triggerElement, e) {
+	    		var bomModel = getSolutionModel();
 	    		if (bomModel == null) {
 	    			return false;
 	    		}
@@ -798,6 +855,18 @@ $(function() {
 	    }); // End of context menu for event data text area.
 	}; // End of initEventsTab
 	
+	
+	// The list of entities to display.  Each entry is an object of the form:
+	// {
+	//   entityType: <Entity type>
+	//   property: <Property name of point>
+	//   propertyType: <either "point" or "polygon">
+	//   idName: <property name of id property>
+	// }
+	var mapEntitiesToDisplay = [];
+	var mapPollingId;
+	var mapMarkers = {};
+	
 	/**
 	 * @function
 	 * @private
@@ -812,7 +881,121 @@ $(function() {
 	        lat: -12.043333,
 	        lng: -77.028333
 		});
+		
+		$("#mapEntityTypes").change(function() {
+			var selectedEntityType = $("#mapEntityTypes option:selected").val();
+			var model = getModelFromEntityType(selectedEntityType);
+			if (model == null) {
+				return;
+			}
+			// Now .. let us see if this type contains a Point.  We do this by looking at each of the
+			// the properties in the entity and ignore the system properties (those starting with "$")
+			// and look for properties that are Points in space.
+			var pointProperty = null;
+			$.each(model, function(propertyName, value){
+				if (!propertyName.startsWith("$") && value == "com.ibm.geolib.geom.Point") {
+					pointProperty = propertyName;
+					return false;
+				}
+			});
+			if (pointProperty != null) {
+				mapEntitiesToDisplay.push({entityType: selectedEntityType, property: pointProperty, propertyType: "point", idName: model["$IdAttrib"] });
+			}
+		});
+		
+		$("#mapPollStart").button().click(function(){
+			if (mapPollingId != null) {
+				clearTimeout(mapPollingId);
+			}
+			var timeOutFunction = function() {
+				mapPollingId = null;
+				
+				if (mapEntitiesToDisplay.length == 0) {
+					return;
+				}
+
+				var solution = getSelectedSolution();
+				if (solution == null) {
+					return;
+				}
+
+				// Ask DSI for the list of entities.
+				var geoProperty = mapEntitiesToDisplay[0].property;
+				var idName      = mapEntitiesToDisplay[0].idName;
+				var entityType  = mapEntitiesToDisplay[0].entityType;
+				
+				DSIREST.listEntityInstances(solution.name, entityType).done(function(data){
+					$.each(data.entities, function(index, value){
+						var id       = value[idName];
+						var markerId = entityType + ":" + id;
+						var lat      = value[geoProperty].coordinates[0];
+						var lng      = value[geoProperty].coordinates[1];
+						
+// At this point we now have an Entity that needs to be shown on the map. We have built some important variables
+// including id (the id of the entity), markerId (a unique id for the marker), lat/lng (the position of the marker).
+// We now check to see if we have PREVIOUSLY drawn a marker for this entity.  If we have NOT, then we create a
+// new marker.  If we HAVE previously drawn a marker, then we update the position of that marker so that it
+// appears at the new location.
+
+						if (mapMarkers[markerId] == null) {
+							var newMarker = gmap.addMarker({
+								lat: lat,
+								lng: lng,
+								title: "XXX"
+							});
+							mapMarkers[markerId] = newMarker;
+						} else {
+							// we have an existing marker, so update its position
+							var existingMarker = mapMarkers[markerId];
+							existingMarker.setPosition(new google.maps.LatLng(lat, lng));							
+						}
+					});	
+				});
+				var timeout = Number($("#mapPollInterval").val());
+				if (!isNaN(timeout)) {
+					mapPollingId = setTimeout(timeOutFunction, timeout*1000);
+				}
+			}; // End of timeoutFunction
+			timeOutFunction();
+			$("#mapPollStop").button("enable");
+			$("#mapPollStart").button("disable");
+		}); // End of mapPollStart -> click
+		
+		$("#mapPollStop").button().click(function() {
+			if (mapPollingId != null) {
+				clearTimeout(mapPollingId);
+				mapPollingId = null;
+			}
+			$("#mapPollStop").button("disable");
+			$("#mapPollStart").button("enable");
+		}).button("disable");// End of mapPollStop -> click
+
 	}; // End of initMapTab
+	
+	
+	/**
+	 * @function
+	 * @private
+	 * @function
+	 * @memberOf main
+	 * @description
+	 * Reset the map tab when something that will affect its state changes.
+	 */
+	function resetMapTab() {
+		var selectedSolution = getSelectedSolution();
+		if (selectedSolution == null) {
+			return;
+		}
+		
+		// Get the list of entity types from the server for the current solution.
+		DSIREST.listEntityTypes(selectedSolution.name).done(function(entityTypes) {
+			var listBox = $("#mapEntityTypes");
+			listBox.empty();
+			$.each(entityTypes.entityTypes, function(index, value) {
+				listBox.append($("<option>", {value: value, text: value}));
+			});
+		});
+	}; // End of resetMapTab
 	
 	/**
 	 * @private
@@ -856,7 +1039,7 @@ $(function() {
 		$('#savedEventsTable').DataTable({
 			autoWidth: false,
 			searching: false,
-			paging: false,
+			paging: true,
 			info: false,
 			"columns": [
 			   { data: "name",    title: "Name" },
@@ -940,7 +1123,7 @@ $(function() {
 		$('#eventHistoryTable').DataTable({
 			autoWidth: false,
 			searching: false,
-			paging: false,
+			paging: true,
 			info: false,
 			"columns": [
 			   { data: "name",    title: "Name" },
@@ -963,7 +1146,7 @@ $(function() {
 				$("#savedEventsTable").DataTable().clear().rows.add(savedEvents).draw();
 			}
 		};
-	};
+	}; // End of initEventSaveLoad
 	
 	/**
 	 * @private
@@ -972,7 +1155,7 @@ $(function() {
 	function showError(message) {
 		$("#errorMessage").text(message);
 		$("#errorDialog").dialog("open");
-	};
+	}; // End of showError
 	
 	
 	/**
@@ -991,6 +1174,9 @@ $(function() {
 			return String(property);
 		}
 		if (typeof property == "object") {
+			if (property == null) {
+				return "<null>";
+			}
 			if (property.hasOwnProperty("$class")) {
 				if (property["$class"] == "Point") {
 					return "Point(" + property.coordinates[1] + "," + property.coordinates[0] + ")";
@@ -1005,7 +1191,81 @@ $(function() {
 			return "Unknown Object: " + property["$class"];
 		}
 		return "Unknown type";
-	}
+	} // End of propertyToString
+	
+	/**
+	 * Load BOM models from the localStorage.
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Load the BOM models from the browser local storage.  Each entry in the object is keyed by the
+	 * solution name and contains two properties:
+	 * <ul>
+	 * <li><b>bomModel</b> - The bomModel object</li>
+	 * <li><b>lastUpdated</b> - The time when the object was last updated</li>
+	 * </ul>
+	 */	
+	function loadBOMModels() {
+		var textData = localStorage.getItem("bomModels");
+		if (textData != null) {
+			bomModels = JSON.parse(textData);
+		}
+		return;
+	}; // End of loadBOMModles
+
+	/**
+	 * Save BOM models to the localStorage.
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Save the BOM models to the browser local storage.  Each entry in the object is keyed by the
+	 * solution name and contains two properties:
+	 * <ul>
+	 * <li><b>bomModel</b> - The bomModel object</li>
+	 * <li><b>lastUpdated</b> - The time when the object was last updated</li>
+	 * </ul>
+	 */	
+	function saveBOMModels() {
+		localStorage.setItem("bomModels", JSON.stringify(bomModels));
+	}; // End of saveBOMModels
+
+
+	/**
+	 * Get the BOM model for a given solution.
+	 * @function
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Get the BOM model for the solution or the currently selected solution.
+	 */
+	function getSolutionModel(solutionName) {
+		if (solutionName == null) {
+			var solution = getSelectedSolution();
+			if (solution == null) {
+				return null;
+			}
+			solutionName = solution.name
+		}
+		var bomModel = bomModels[solutionName]; // This may be null
+		if (bomModel == null) {
+			return null;
+		}
+		return bomModel.bomModel;
+	}; // End of getSolutionModel
+
+	
+	/**
+	 * Set the BOM model for the given solution.
+	 * @function
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Set the BOM model for the given solution.
+	 */
+	function setSolutionModel(solutionName, model) {
+		bomModels[solutionName] = {bomModel: model, lastUpdated: new Date()};
+		saveBOMModels();
+	}; // End of setSolutionModel
 	
 	refreshSolutions();
 }); // End of on load

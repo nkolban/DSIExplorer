@@ -121,10 +121,29 @@ var DSIREST = (function(){
 			return this._doGET("/ibm/ia/rest/solutions/" + solutionName + "/entity-types/" + entityType + "/entities/" + entityId);
 		}, // End of getEntity
 		
+		/**
+		 * @public
+		 * @description
+		 * Ask DSI for a list of the entities for a given solution/entity type pair.  An object is returned that has the
+		 * following structure:
+		 * <ul>
+		 * <li><b>$class</b> - The type of the entities of the form Collection[entityType]
+		 * <li><b>entities</b> - An array of entities where each each entity is of the form:
+		 * <ul>
+		 * <li><b>$IdAttrib</b> - The property name that is the id of the entity.</li>
+		 * <li><b>$class</b> - The type of the entity.</li>
+		 * <li><b>$CreationTime</b> - </li>
+		 * <li><b> ... properties ... </b> - The individual properties of the entity.
+		 * </ul>
+		 * </ul>
+		 */
 		listEntityInstances: function(solutionName, entityType) {
 			return this._doGET("/ibm/ia/rest/solutions/" + solutionName + "/entity-types/" + entityType + "/entities");
 		}, // End of listEntityInstances
 		
+		/**
+		 * @public
+		 */
 		listEntityTypes: function(solutionName) {
 			return this._doGET("/ibm/ia/rest/solutions/" + solutionName + "/entity-types");
 		},

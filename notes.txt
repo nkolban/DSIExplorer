@@ -27,3 +27,12 @@ Sample event:
 Packages used
 jQuery-contextMenu
 jQuery-File-Upload - https://github.com/blueimp/jQuery-File-Upload
+
+
+    <webApplication id="DSI_REST_Utils" location="DSI_REST_Utils.war" name="DSI_REST_Utils">
+    	<classloader apiTypeVisibility="spec,ibm-api,api,third-party">
+    		<privateLibrary >
+                <fileset dir="C:\IBM\ODMInsights88\runtime\ia\lib" includes="com.ibm.ia.engine.engine-runtime_1.30.2.CIS2016-02-01T092131Z.jar"></fileset>
+            </privateLibrary>
+    	</classloader>
+    </webApplication>

@@ -29,6 +29,7 @@
 <link rel="stylesheet" type="text/css" href="lib/jQuery-contextMenu/jquery.contextMenu.min.css" />
 <script src="lib/jQuery-contextMenu/jquery.contextMenu.min.js"></script>
 
+<link rel="stylesheet" type="text/css" href="lib/layout/layout-default.css" />
 <script src="lib/layout/jquery.layout.min.js"></script>
 
 
@@ -61,7 +62,7 @@
 </head>
 <body>
 	<div class="ui-layout-center">
-	<div id="tabs">
+	<div id="tabs" class="ui-layout-content">
 		<ul>
 			<li><a href="#solutionsTab">Solutions</a></li>
 			<li><a href="#entitiesTab">Entities</a></li>
@@ -80,10 +81,10 @@
 			<table id="solutions"></table>
 			<p>
 			<button id="stop" class="dsi_enableOnSolution">Stop</button>
-			<button id="activate" class="dsi_enableOnSolution">Activate</button>
 			<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
+			<button id="activate" class="dsi_enableOnSolution">Activate</button>			
 			<button id="refresh" class="dsi_enableOnSolution">Refresh</button>	
-			<input id="bomFileUpload" type="file" name="thefile" data-url="/RestTest1/xxx/myPath" class="myHide">
+			<input id="bomFileUpload" type="file" name="thefile" class="myHide">
 			<button id="bomFileUploadButton" class="dsi_enableOnSolution">BOM Select</button>
 			</p>
 		</div>
@@ -95,7 +96,7 @@
 		<div id="eventsTabs">
 		Events
 		<br />
-			<textarea id="eventData" rows=10 style="width: 100%; max-width: 100%; font-family: 'courier new'"></textarea>
+			<textarea id="eventData" rows=10 style="width: 95%; max-width: 95%; font-family: 'courier new'"></textarea>
 			<button id="sendEvent">Send</button>
 			<button id="eventHistory">History</button>
 			<button id="eventSaveButton">Save</button>
@@ -107,16 +108,23 @@
 
 -->		
 		<div id="entitiesTab">
-			<label for="entityTypes">Entity Types:</label>
-			<select id="entityTypes" style="width: 200px;"></select>
-			<button id="getEntities" class="dsi_enableOnSolution">Get Entities</button>
-			<button id="deleteAllEntities">Delete All</button>
+			<label for="entityTypesList" style="vertical-align: top;">Entity Types:</label>
+			<select size="5" id="entityTypesList" style="min-width: 12em;"></select>
+			<div style="display: inline-block; vertical-align: top;">
+				<div>
+					<button id="getEntities" class="dsi_enableOnEntityType">Get Entities</button>
+				</div>
+				<div style="margin-top: 5px;">
+					<button id="deleteAllEntities" class="dsi_enableOnEntityType" >Delete All</button>
+				</div>
+			</div>
+			
 			<p>
 				<button id="collapseAll">Collapse all</button>
 				<button id="expandAll">Expand all</button>
 			</p>
 			<div class="myBorder" style="margin-bottom: 10px; background-color: white;">
-				<div id="entitiesTree"></div>
+				<div id="entitiesTree" style="height: 400px; overflow: auto;"></div>
 			</div>
 			<div id="entitiesTableDiv">
 			</div>
@@ -139,6 +147,16 @@
 -->	
 		<div id="mapTab" >
 			<div id="map"></div>
+			<div style="margin-top: 5px;">
+				<label for="mapPollInterval">Poll Interval:</label>
+				<input id = "mapPollInterval" type="number" min="1" value="5">
+			</div>
+			<div style="margin-top: 5px;">
+				<label for="mapEntityTypes" style="vertical-align: top;">Entity Types to display:</label>
+				<select id="mapEntityTypes" size="5" style="min-width: 12em;"></select>
+				<button id="mapPollStart" style="vertical-align: top;">Start</button>
+				<button id="mapPollStop" style="vertical-align: top;">Stop</button>
+			</div>
 		</div>
 <!--
 
@@ -154,7 +172,7 @@
 	</div> <!-- End of layout center -->
 	<div class="ui-layout-south ui-widget ui-widget-content" style="text-align: right;">
 	Selected solution: <span id="selectedSolutionLabel">None</span>, BOM loaded: <span id="bomLoadedLabel">No</span>
-	</div>
+	</div> <!--  End of ui-layout-south -->
 	<!-- Dialogs -->
 	<div id="confirmReplace">
 		<p>Confirm replacement of existing event data.</p>
