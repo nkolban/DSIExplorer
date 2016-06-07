@@ -3,9 +3,7 @@
 <head>
 <meta charset="ISO-8859-1">
 <title>DSI Explorer</title>
-<!-- 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.css" rel="stylesheet" type="text/css" />
--->
+
 <link href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" />
 
 
@@ -40,6 +38,7 @@
 <script type="text/javascript" src="src/DSIJMX.js"></script>
 <script type="text/javascript" src="src/DSIREST.js"></script>
 <script type="text/javascript" src="src/main.js"></script>
+
 <style>
 .ui-selectmenu-button {
 	vertical-align: middle;
@@ -57,8 +56,17 @@
 	width: 0;
 	height: 0;
 }
+
+
+.tailTable {
+	font-family: monospace;
+	background: white;
+	//border-spacing: 0px;
+	//border-color: lightgrey;
+};
+
 </style>
-<!-- End AMD -->
+
 </head>
 <body>
 	<div class="ui-layout-center">
@@ -69,7 +77,9 @@
 			<li><a href="#eventsTabs">Events</a></li>			
 			<li><a href="#globalPropertiesTab">Global Properties</a></li>
 			<li><a href="#mapTab">Map</a>
+			<li><a href="#logsTab">Logs</a>			
 			<li><a href="#debuggingTab">Debugging</a></li>
+			<li><a href="#aboutTab">About</a></li>
 		</ul>
 <!--
 
@@ -77,16 +87,16 @@
 
 -->	
 		<div id="solutionsTab">
-		
-			<table id="solutions"></table>
-			<p>
-			<button id="stop" class="dsi_enableOnSolution">Stop</button>
-			<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
-			<button id="activate" class="dsi_enableOnSolution">Activate</button>			
-			<button id="refresh" class="dsi_enableOnSolution">Refresh</button>	
-			<input id="bomFileUpload" type="file" name="thefile" class="myHide">
-			<button id="bomFileUploadButton" class="dsi_enableOnSolution">BOM Select</button>
-			</p>
+			<div style="display: flex; flex-direction: column; height:100%">
+				<table id="solutions" style="flex-grow: 1;"></table>
+				<div style="margin-top: 5px;">
+					<button id="stop" class="dsi_enableOnSolution">Stop</button>
+					<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
+					<button id="activate" class="dsi_enableOnSolution">Activate</button>			
+					<button id="refresh" class="dsi_enableOnSolution">Refresh</button>	
+					<input id="bomFileUpload" type="file" name="thefile" class="myHide">
+				</div>
+			</div>
 		</div>
 <!--
 
@@ -94,13 +104,18 @@
 
 -->			
 		<div id="eventsTabs">
-		Events
-		<br />
-			<textarea id="eventData" rows=10 style="width: 95%; max-width: 95%; font-family: 'courier new'"></textarea>
-			<button id="sendEvent">Send</button>
-			<button id="eventHistory">History</button>
-			<button id="eventSaveButton">Save</button>
-			<button id="eventLoadButton">Load</button>
+			<div style="display: flex; flex-direction: column; height: 100%;">
+			Event:
+			<br />
+
+				<textarea id="eventData" rows=10 style="flex-grow:1; width: 100%; max-width: 100%; font-family: 'courier new'"></textarea>
+				<div style="margin-top: 5px;">
+					<button id="sendEvent" style="margin-right: 20px;">Send</button>
+					<button id="eventHistory">History</button>
+					<button id="eventSaveButton">Save</button>
+					<button id="eventLoadButton">Load</button>
+				</div>
+			</div>
 		</div>
 <!--
 
@@ -146,10 +161,11 @@
 
 -->	
 		<div id="mapTab" >
-			<div id="map"></div>
+		<div style="display: flex; flex-direction: column; height: 100%;">
+			<div id="map" style="flex-grow:1;"></div>
 			<div style="margin-top: 5px;">
-				<label for="mapPollInterval">Poll Interval:</label>
-				<input id = "mapPollInterval" type="number" min="1" value="5">
+				<label for="mapPollInterval">Poll Interval (seconds):</label>
+				<input id = "mapPollInterval" type="number" min="1" value="5" style="width: 2.5em;">
 			</div>
 			<div style="margin-top: 5px;">
 				<label for="mapEntityTypes" style="vertical-align: top;">Entity Types to display:</label>
@@ -157,7 +173,28 @@
 				<button id="mapPollStart" style="vertical-align: top;">Start</button>
 				<button id="mapPollStop" style="vertical-align: top;">Stop</button>
 			</div>
+			</div>
 		</div>
+
+<!--
+
+*** LOGS ***
+ 
+-->
+	<div id="logsTab">
+		<div style="display: flex; flex-direction: column; align-items: flex-start; height: 100%;">
+			<div id="tailScrollContainer" style="height: 500px; width: 100%; overflow: auto; flex-grow:1;">
+				<table id="tailTable" class="tailTable">
+					<tbody id="tailTbody"></tbody>
+  				</table>
+  			</div>
+  			<div style="margin-top: 5px;">
+  			  	<label for="tailFollow">Follow: </label>
+  				<input type="checkbox" id="tailFollow">
+  				<button id="tailBottom">Bottom</button>
+  			</div>
+  		</div>
+  	</div>
 <!--
 
 *** DEBUGGING ***
@@ -168,11 +205,33 @@
 		not be shown in non-development distributions</p>
 			<button id="clearLocalStorage">Clear Local Storage</button> - Clear the local storage for the application.
 		</div>
+		
+<!--
+
+*** ABOUT ***
+ 
+-->
+		<div id="aboutTab">
+			<p>DSI Explorer is a an Open Source application providing tools and utilities to the DSI developer
+			and administrator.  It is currently split into two Github repositories:</p>
+			<ul>
+			<li><a href="https://github.com/nkolban/DSIExplorer">DSIExplorer</a></li>
+			<li><a href="https://github.com/nkolban/DSI_Rest_Utils">DSI_Rest_Utils</a></li>
+			
+			</ul>
+			<p>DSI Explorer is maintained by</p>
+			<ul>
+			<li>Neil Kolban (kolban@us.ibm.com)</li>
+			</ul>
+		</div>
 	</div>
 	</div> <!-- End of layout center -->
+	
+	<!-- South content -->
 	<div class="ui-layout-south ui-widget ui-widget-content" style="text-align: right;">
 	Selected solution: <span id="selectedSolutionLabel">None</span>, BOM loaded: <span id="bomLoadedLabel">No</span>
 	</div> <!--  End of ui-layout-south -->
+	
 	<!-- Dialogs -->
 	<div id="confirmReplace">
 		<p>Confirm replacement of existing event data.</p>

@@ -43,6 +43,19 @@ var DSIREST = (function(){
 		$.ajax(options); // End of $.ajax
 	}; // End of _doRESTActual
 	
+	/**
+	 * @private
+	 * @function
+	 * @module DSIREST
+	 * @description
+	 * Convert a DSI Event JSON String to an XML String. Some of the rules followed by this
+	 * conversion are:
+	 * <ul>
+	 * <li>Property names that start with "$" are not included in the output.</li>
+	 * <li>$Name is a special property that is the eventName.</li>
+	 * <li>$Namespace is a special property that is the namespace of the event.</li>
+	 * </ul>
+	 */
 	function _JSON2XML(eventJSON) {
 		var event = JSON.parse(eventJSON);
 		var eventName = event["$Name"].split(".")[1];
@@ -58,6 +71,8 @@ var DSIREST = (function(){
 		return eventXML;
 	}; // End of _JSON2XML
 
+
+	// Return the object that is DSIREST
 	return {
 
 		/**
@@ -185,10 +200,11 @@ var DSIREST = (function(){
 		/**
 		 * @name DSIREST#sendEvent
 		 * @description
-		 * Send an event to DSI.
+		 * Send an event to DSI.  The input is a JSON string that encodes the event to be sent.
+		 * The actual event payload is an XML string.
 		 * @function
-		 * @param solution
-		 * @param event
+		 * @param solution - The name of the solution to which this event will be sent.
+		 * @param event - A JSON string that represents the event to be sent.
 		 * @returns
 		 */
 		sendEvent: function(solution, event) {

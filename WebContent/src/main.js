@@ -35,6 +35,15 @@
  * @memberOf main
  */
 $(function() {
+	// Since we are assuming that this page is loaded from the DSI server we should set the target of
+	// DSI REST requests to the server from which the page was loaded ... including the protocol
+	// and port numbers.
+	if (window.location.origin != null) {
+		DSIREST.setBaseURL(window.location.origin);
+	} else {
+		DSIREST.setBaseURL(window.location.protocol + "://" + window.location.host);
+	}
+
 	/**
 	 * @memberOf main
 	 */
@@ -118,6 +127,7 @@ $(function() {
     initSolutionsTab();
     initGlobalPropertiesTab();
     initMapTab();
+    initLogsTab();
     
     // Debugging page
     // Clear local storage
@@ -329,6 +339,7 @@ $(function() {
 
 
 	/**
+	 * Save a just sent event.
 	 * @function
 	 * @private
 	 * @memberOf main
@@ -343,6 +354,9 @@ $(function() {
 		// o timestamp
 		// o data
 		// o name
+		//
+		// We build the desired record and then retrieve the current list of records from localStorage.
+		// We then push the new record onto the end of the array and write it back to localStorage.
 		var record = {
 			name: "XXX",
 			data: sendEvent,
@@ -481,12 +495,31 @@ $(function() {
 		var table = $('#solutions').DataTable({
 			autoWidth: false,
 			searching: false,
-			scrollY: "500px",
+			//scrollY: "500px",
 			paging: false,
 			info: false,
 			"columns": [
 			   { data: "name",    title: "Solution Name" },
-			   { data: "version", title: "Solution Version" }
+			   { data: "version", title: "Solution Version" },
+			   {
+				   data: "name",
+				   title: "BOM",
+				   render: function(data, type, row, meta) {
+					   return "";
+				   },
+				   "createdCell": function(td, cellData, rowData, row, col) {
+					   var b = $("<button>Load</button>").button().click(function(event) {
+						   event.stopPropagation();
+						   console.log("BOM Load requested!");
+						   var row = $(this).data("row");
+						   //debugger;
+						   table.row(row).select();
+						   //debugger;
+						   $("#bomFileUpload").click();
+					   }).data("row", row);
+					   $(td).append(b);
+				   }
+			   }
 			],
 			select: 'single'
 		});
@@ -571,13 +604,6 @@ $(function() {
 	        	$("#bomLoadedLabel").text("Yes");
 	        }
 	    });
-
-// Handle the user clicking the file upload button	   
-	    $("#bomFileUploadButton").button({
-			icons: {primary: "ui-icon-document"}
-		}).click(function() {
-	    	$("#bomFileUpload").click();
-	    });
 	    
 	    // MUST BE LAST THING DONE IN INITIALIZATION
 		$(".dsi_enableOnSolution").button("option", "disabled", true);
@@ -623,6 +649,19 @@ $(function() {
 						columns.push(newColumn);
 					}
 				});
+				
+				// Now that we have an array of columns, find the column that is the ID column and make that the
+				// first column in the list.
+				var id = entityModel["$IdAttrib"];
+				$.each(columns, function(index, value){
+					if (value.data == id) {
+						// Swap column[index] and column[0]
+						columns[index] = columns[0];
+						columns[0] = value;
+						return false;
+					}
+				});
+				
 				
 				//$("#entitiesTable").DataTable("option", "columns", columns);
 				$("#entitiesTable").remove();
@@ -763,18 +802,25 @@ $(function() {
 	 * @function
 	 * @private
 	 * @memberOf main
+	 * @description
+	 * Initialize the Events tab.
 	 */
 	function initEventsTab() {
+	
+// Create the sendEvent button		
 		$("#sendEvent").button({disabled: true});
-		
-		// Handle a request to send an event to DSI.
+
+// Define a handler to be invoked when the the sendEvent button is clicked.	
+// Handle a request to send an event to DSI.
 		$("#sendEvent").click(function() {
+			// If there is no data, then nothing further to do.
 			var eventData = $("#eventData").val().trim();
 			if (eventData.length == 0) {
 				return;
 			}
+			// Send the event to DSI.
 			DSIREST.sendEvent(solutionToSimpleName(getSelectedSolution()), eventData).then(function() {
-				// On success
+				// On success, save the event we just sent to the history of previously sent events.
 				saveSendEvent(eventData);
 			}, function(errorObj) {
 				// On error
@@ -787,9 +833,9 @@ $(function() {
 			var enable = $("#eventData").val().trim().length>0?"enable":"disable"
 			$("#sendEvent").button(enable);
 			$("#eventSaveButton").button(enable);
-			
 		});
 		
+		// Create a confirm replace dialog.
 	    $("#confirmReplace").dialog({
 	    	autoOpen: false,
 	    	modal: true,
@@ -798,6 +844,7 @@ $(function() {
 	    	buttons: [{
 	    		text: "Replace",
 	    		click: function() {
+	    			// When clicked, invoke the replace function
 	    			$("#eventData").data("replaceFunction")();
 	    			$(this).dialog("close");
 	    		}
@@ -877,9 +924,9 @@ $(function() {
 		gmap = new GMaps({
 			div: "#map",
 			width: "100%",
-			height: "500px",
-	        lat: -12.043333,
-	        lng: -77.028333
+			//height: "500px",
+	        lat: 32.794,
+	        lng: -97.042
 		});
 		
 		$("#mapEntityTypes").change(function() {
@@ -904,6 +951,7 @@ $(function() {
 		});
 		
 		$("#mapPollStart").button().click(function(){
+			// If there is a timer already counting down, cancel it.
 			if (mapPollingId != null) {
 				clearTimeout(mapPollingId);
 			}
@@ -924,38 +972,69 @@ $(function() {
 				var idName      = mapEntitiesToDisplay[0].idName;
 				var entityType  = mapEntitiesToDisplay[0].entityType;
 				
+// As we add markers to the map, we add them because there is an entity that contains a point that we wish to show.
+// However, there is the circumstance that entities may be deleted/removed.  This would mean that we have markers
+// remaining on the map even though there is no longer a corresponding entity in DSI.  For example, at time T1
+// an entity E1 is created.  At time T2, it is placed on the map.  At time T3, the entity is deleted.  Now we 
+// have the marker remaining on the map that was added at time T2.  This is no good.  Our solution is to create
+// an object that has a flag for each of the previously drawn markers.  As we walk through each of our CURRENT
+// existing entities, we remove that flag from our set.  At the end what remains in our marker set are the ones
+// that were previously drawn but now no longer have corresponding entities.  These can now be removed from the
+// map and forgotten about.
+
+// We start by creating a marker set of ALL the previously drawn markers.				
+				var clearMarkerSet = {};
+				$.each(mapMarkers, function(propertyName) {
+					clearMarkerSet[propertyName] = true;
+				});
+				
 				DSIREST.listEntityInstances(solution.name, entityType).done(function(data){
-					$.each(data.entities, function(index, value){
-						var id       = value[idName];
-						var markerId = entityType + ":" + id;
-						var lat      = value[geoProperty].coordinates[0];
-						var lng      = value[geoProperty].coordinates[1];
-						
+					if (data != null && data.entities != null) {
+						$.each(data.entities, function(index, value){
+							if (value[geoProperty] == null) {
+								return true;
+							}
+							var id       = value[idName];
+							var markerId = entityType + ":" + id;
+							var lat      = value[geoProperty].coordinates[1];
+							var lng      = value[geoProperty].coordinates[0];
+							
 // At this point we now have an Entity that needs to be shown on the map. We have built some important variables
 // including id (the id of the entity), markerId (a unique id for the marker), lat/lng (the position of the marker).
 // We now check to see if we have PREVIOUSLY drawn a marker for this entity.  If we have NOT, then we create a
 // new marker.  If we HAVE previously drawn a marker, then we update the position of that marker so that it
 // appears at the new location.
+	
+							if (mapMarkers[markerId] == null) {
+								var newMarker = gmap.addMarker({
+									lat: lat,
+									lng: lng,
+									title: "XXX"
+								});
+								mapMarkers[markerId] = newMarker;
+							} else {
+								// we have an existing marker, so update its position
+								var existingMarker = mapMarkers[markerId];
+								existingMarker.setPosition(new google.maps.LatLng(lat, lng));
+								delete clearMarkerSet[markerId];
+							}
+						}); // End of each of the data.entities
+					}; // End of data != null
 
-						if (mapMarkers[markerId] == null) {
-							var newMarker = gmap.addMarker({
-								lat: lat,
-								lng: lng,
-								title: "XXX"
-							});
-							mapMarkers[markerId] = newMarker;
-						} else {
-							// we have an existing marker, so update its position
-							var existingMarker = mapMarkers[markerId];
-							existingMarker.setPosition(new google.maps.LatLng(lat, lng));							
-						}
-					});	
+// We have now walked through all of our entities, this means that the entries in clearMarkerSet now need to be deleted.
+					$.each(clearMarkerSet, function(markerId) {
+						mapMarkers[markerId].setMap(null);
+						delete mapMarkers[markerId];
+					});
 				});
+
+// Determine how long it should be before we refresh and add a one shot timer to call ourselves back
 				var timeout = Number($("#mapPollInterval").val());
 				if (!isNaN(timeout)) {
 					mapPollingId = setTimeout(timeOutFunction, timeout*1000);
 				}
 			}; // End of timeoutFunction
+			
 			timeOutFunction();
 			$("#mapPollStop").button("enable");
 			$("#mapPollStart").button("disable");
@@ -999,11 +1078,51 @@ $(function() {
 	
 	/**
 	 * @private
+	 * @function
+	 * @memberOf main
+	 */
+	function initLogsTab() {
+	  var ws = new WebSocket("wss://localhost:3000");
+	  ws.onopen = function() {
+	    console.log("Connection opened!");
+	    const LOGFILE = "C:/IBM/ODMInsights88/runtime/wlp/usr/servers/cisDev/logs/messages.log";
+	    options = {
+	      fileName: LOGFILE,
+	      sendAll: true
+	    };
+	    ws.send(JSON.stringify(options));
+	  };
+	  ws.onmessage = function(messageEvent) {
+	    console.log("We saw a message!");
+	    // event.data = line
+	    var tr = $("<tr>");
+	    var td = $("<td>");
+	    td.text(messageEvent.data);
+	    tr.append(td);
+	    $("#tailTbody").append(tr);
+	  };
+	  ws.onclose = function(closeEvent) {
+	    console.log("Web Socket closed! code=%d, reason=%s", closeEvent.code, closeEvent.reason);
+	  };
+	  ws.onerror = function() {
+	    console.log("Web Socket error!");
+	  };
+	  
+	  $("#tailBottom").button().click(function() {
+	    $("#tailScrollContainer").scrollTop($("#tailTable").height());
+	  });
+	};
+	
+	/**
+	 * @private
 	 * @memberOf main
 	 */
 	function initEventSaveLoad() {
 		$("#eventHistory").button().click(function() {
-			// Populate the table with the event history
+			// Populate the table with the event history.  This history is available in the localStorage of the
+			// browser under the key "sentHistory".  It is an array of objects where each object contains:
+			// name
+			// timestamp
 			$("#eventHistoryTable").DataTable().clear().rows.add(localStorage.getObject("sentHistory")).draw();
 			$("#eventHistoryDialog").dialog("open");
 		});
@@ -1083,14 +1202,14 @@ $(function() {
 	    });
 	    
 	    $("#eventHistoryDialog").dialog({
-	    	width: 600,
-	    	autoOpen: false,
-	    	modal: true,
-	    	resizable: false,
-	    	title: "Historic events",
-	    	buttons: [{
-	    		text: "Use",
-	    		click: function() {
+	    	"width": 600,
+	    	"autoOpen": false,
+	    	"modal": true,
+	    	"resizable": false,
+	    	"title": "Historic events",
+	    	"buttons": [{
+	    		"text": "Use",
+	    		"click": function() {
 	    			var selectedRows = $("#eventHistoryTable").DataTable().rows({selected: true});
 	    			if (selectedRows.count() != 1) {
 	    				return;
@@ -1106,25 +1225,27 @@ $(function() {
 	    		}
 	    	},
 	    	{
-	    		text: "Clear",
-	    		click: function() {
+	    		"text": "Clear",
+	    		"click": function() {
 	    			localStorage.setObject('sentHistory', []);
 	    			$(this).dialog("close");
 	    		}
 	    	},
 	    	{
-	    		text: "Cancel",
-	    		click: function() {
+	    		"text": "Cancel",
+	    		"click": function() {
 	    			$(this).dialog("close");
 	    		}
 	    	}]
 	    }); // End of eventHistoryDialog
 	    
+// Initialize the event history table.  This table is used to show the set of events that have been
+// previously sent.	    
 		$('#eventHistoryTable').DataTable({
-			autoWidth: false,
-			searching: false,
-			paging: true,
-			info: false,
+			"autoWidth": false,
+			"searching": false,
+			"paging": true,
+			"info": false,
 			"columns": [
 			   { data: "name",    title: "Name" },
 			   { data: "timestamp", title: "Date", render: function(data, type, row, meta) {
@@ -1132,7 +1253,8 @@ $(function() {
 				   return new Date(data).toLocaleString();
 			   }}
 			],
-			select: 'single'
+			"order": [[1, "desc"]],
+			"select": 'single'
 		});
 		
 		function updateSavedEventsTable() {
