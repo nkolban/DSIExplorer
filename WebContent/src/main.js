@@ -38,7 +38,7 @@ $(function() {
 	// Since we are assuming that this page is loaded from the DSI server we should set the target of
 	// DSI REST requests to the server from which the page was loaded ... including the protocol
 	// and port numbers.
-	if (window.location.origin != null) {
+	if (window.location.origin !== null) {
 		DSIREST.setBaseURL(window.location.origin);
 	} else {
 		DSIREST.setBaseURL(window.location.protocol + "://" + window.location.host);
@@ -128,16 +128,12 @@ $(function() {
     initGlobalPropertiesTab();
     initMapTab();
     initLogsTab();
-    
-    // Debugging page
-    // Clear local storage
-    $("#clearLocalStorage").button().click(function() {
-    	localStorage.clear();
-    });
+    initAboutTab();
 
 	/**
 	 * @private
 	 * @memberOf main
+	 * @description
 	 */
 	function entityToTreeNode(entity) {
 		var entityNode = {
@@ -162,7 +158,7 @@ $(function() {
 			}
 		}); // End of iteration over each of the members of the current entity
 		return  entityNode;
-	}; // End of entityToTreeNode
+	} // End of entityToTreeNode
 
 
 	/**
@@ -181,7 +177,7 @@ $(function() {
 		var treeNodes = [];
 		
 		// It is possible we will not have any entities
-		if (entities != null) {
+		if (entities !== null) {
 			// Iterate over each of the entities
 			$.each(entities.entities, function(index, entity){
 				treeNodes.push(entityToTreeNode(entity));
@@ -195,7 +191,7 @@ $(function() {
 
 		$("#entitiesTree").jstree(true).settings.core.data = treeNodes;
 		$("#entitiesTree").jstree(true).refresh();
-	}; // End of entitiesToTree
+	} // End of entitiesToTree
 
 
 	/**
@@ -209,7 +205,7 @@ $(function() {
 		// Entity types that are to be displayed are a function of the current solution so
 		// if we have no solution selected then there is nothing to do.
 		var selectedSolution = getSelectedSolution();
-		if (selectedSolution == null) {
+		if (selectedSolution === null) {
 			return;
 		}
 		
@@ -226,7 +222,7 @@ $(function() {
 				listBox.append($("<option>", {value: value, text: value}));
 			});
 		});
-	}; // End of updateEntityTypes
+	} // End of updateEntityTypes
 
 
 	/**
@@ -239,7 +235,7 @@ $(function() {
 			console.log("Solns=%O", solutions);
 			$('#solutions').DataTable().clear().rows.add(solutions).draw();
 		});
-	}; // End of refresh
+	} // End of refresh
 
 
 	/**
@@ -255,11 +251,11 @@ $(function() {
 	 */
 	function getSelectedSolution() {
 		var selectedRow = $("#solutions").DataTable().row({selected: true});
-		if (selectedRow == null) {
+		if (selectedRow === null) {
 			return null;
 		}
 		return selectedRow.data();
-	}; // End of getSelectedSolution
+	} // End of getSelectedSolution
 
 
 	/**
@@ -272,7 +268,7 @@ $(function() {
 			return splitValues[0];
 		}
 		return (splitValues[1]);
-	}; // End of solutionToSimpleName
+	} // End of solutionToSimpleName
 
 
 	/**
@@ -284,7 +280,7 @@ $(function() {
 	 */
 	function getSelectedEntityType() {
 		return $("#entityTypesList option:selected").val();
-	}; // End of getSelectedEntityTypes
+	} // End of getSelectedEntityTypes
 
 
 	/**
@@ -302,7 +298,7 @@ $(function() {
 	 */
 	function getModelFromEntityType(entityType) {
 		var bomModel = getSolutionModel();
-		if (bomModel == null) {
+		if (bomModel === null) {
 			return null;
 		}
 		var foundModel = null;
@@ -313,7 +309,7 @@ $(function() {
 			}
 		});
 		return foundModel;
-	}; // End of getModelFromEntityType
+	} // End of getModelFromEntityType
 
 	
 
@@ -325,7 +321,7 @@ $(function() {
 	 */
 	function getEventByName(name) {
 		var bomModel = getSolutionModel();
-		if (bomModel == null) {
+		if (bomModel === null) {
 			return null;
 		}
 		var ret = null;
@@ -335,7 +331,7 @@ $(function() {
 			}
 		});
 		return ret;
-	}; // End of getEventByName
+	} // End of getEventByName
 
 
 	/**
@@ -363,12 +359,12 @@ $(function() {
 			timestamp: new Date()
 		};
 		var currentData = localStorage.getObject("sentHistory");
-		if (currentData == null) {
+		if (currentData === null) {
 			currentData = [];
 		}
 		currentData.push(record);
 		localStorage.setObject("sentHistory", currentData);
-	}; // End of saveSendEvent()
+	} // End of saveSendEvent()
 	
 	
 	/**
@@ -383,7 +379,7 @@ $(function() {
 	 */
 	function saveEvent(name, sendEvent) {
 		name = name.trim();
-		if (name.length == 0) {
+		if (name.length === 0) {
 			console.log("saveEvent: Can't save an event with no name.");
 			return;
 		}
@@ -392,9 +388,9 @@ $(function() {
 			name: name,
 			data: sendEvent,
 			lastUpdated: new Date()
-		}
+		};
 		var currentData = localStorage.getObject("savedEvents");
-		if (currentData == null) {
+		if (currentData === null) {
 			currentData = [];
 		}
 		// See if we have a current record that contains the event.
@@ -409,7 +405,7 @@ $(function() {
 			currentData.push(record);
 		}
 		localStorage.setObject("savedEvents", currentData);
-	}; // End of saveEvent
+	} // End of saveEvent
 	
 	/**
 	 * @function
@@ -418,7 +414,7 @@ $(function() {
 	 */
 	function deleteSavedEvent(name) {
 		var currentData = localStorage.getObject("savedEvents");
-		if (currentData == null) {
+		if (currentData === null) {
 			return;
 		}
 		// See if we have a current record that contains the event.
@@ -433,7 +429,7 @@ $(function() {
 			currentData.splice(foundIndex, 1);
 			localStorage.setObject("savedEvents", currentData);
 		}
-	}; // End of deleteSavedEvent
+	} // End of deleteSavedEvent
 	
 	/**
 	 * @function
@@ -454,7 +450,7 @@ $(function() {
 	    		}
 	    	}]
 		});
-	}; // End of generalInit
+	} // End of generalInit
 	
 	
 	/**
@@ -482,12 +478,14 @@ $(function() {
 			});
 			$('#globalProperties').DataTable().clear().rows.add(values).draw();
 		});
-	}; // End of initGlobalProperties
+	} // End of initGlobalProperties
 	
 	/**
 	 * @function
 	 * @private
 	 * @memberOf main
+	 * @description
+	 *  
 	 */
 	function initSolutionsTab() {
 
@@ -495,7 +493,7 @@ $(function() {
 		var table = $('#solutions').DataTable({
 			autoWidth: false,
 			searching: false,
-			//scrollY: "500px",
+			scrollCollapse: false,
 			paging: false,
 			info: false,
 			"columns": [
@@ -522,7 +520,7 @@ $(function() {
 			   }
 			],
 			select: 'single'
-		});
+		}); // End of table definition for solution table.
 		
 		// Handle a selection change on the solutions table.  When a new solution is selected, we need to get the new list
 		// of entity types that are available.  In addition, we need to enable the buttons that should only be active when
@@ -534,7 +532,7 @@ $(function() {
 			$("#selectedSolutionLabel").text(getSelectedSolution().name);
 			resetMapTab();
 			var bomModel = getSolutionModel(getSelectedSolution().name);
-			$("#bomLoadedLabel").text(bomModel!=null?"Yes":"No");
+			$("#bomLoadedLabel").text(bomModel!==null?"Yes":"No");
 		}); // End of solution selection changed.
 		
 		table.on('deselect', function(e, dt, type, indexes) {
@@ -597,7 +595,7 @@ $(function() {
 	        "url": "/DSI_REST_Utils/xxx/myPath",
 	        done: function (e, data) {
 	        	var selectedSolution = getSelectedSolution();
-	        	if (selectedSolution == null) {
+	        	if (selectedSolution === null) {
 	        		return;
 	        	}
 	        	setSolutionModel(selectedSolution.name, data.result);
@@ -607,7 +605,7 @@ $(function() {
 	    
 	    // MUST BE LAST THING DONE IN INITIALIZATION
 		$(".dsi_enableOnSolution").button("option", "disabled", true);
-	}; // End of initSolutionsTab
+	} // End of initSolutionsTab
 	
 	/**
 	 * @function
@@ -619,12 +617,12 @@ $(function() {
 	function initEntitiesTab() {
 		var refreshEntities = function() {
 			var solution = getSelectedSolution();
-			if (solution == null) {
+			if (solution === null) {
 				return;
 			}
 			var selectedEntityType = getSelectedEntityType();
 			var entityModel = getModelFromEntityType(selectedEntityType);
-			if (entityModel != null) {
+			if (entityModel !== null) {
 				// Create the dynamic columns used to show the data.
 				var columns = [];
 				
@@ -680,7 +678,7 @@ $(function() {
 			// Ask DSI for the list of entities.
 			DSIREST.listEntityInstances(solution.name, selectedEntityType).done(function(data){
 				entitiesToTree(data);
-				if (data != null) {
+				if (data !== null) {
 					$("#entitiesTable").DataTable().rows.add(data.entities).draw();
 				}
 			});
@@ -694,10 +692,10 @@ $(function() {
 			$(".dsi_enableOnEntityType").button("option", "disabled", false);
 		});
 		
-		// Handle a request to elete all the entities.
+		// Handle a request to delete all the entities.
 		$("#deleteAllEntities").button().click(function() {
 			var solution = getSelectedSolution();
-			if (solution == null) {
+			if (solution === null) {
 				return;
 			}
 			DSIREST.deleteAllEntities(solution.name, getSelectedEntityType());
@@ -723,8 +721,8 @@ $(function() {
 			},
 			contextmenu: {
 				items: function(node) {
-					if (node.data == null || node.data.entityRoot != true) {
-						return;
+					if (node.data === null || node.data.entityRoot !== true) {
+						return null;
 					}
 					return {
 	// Add a refresh button that will refresh the nodes in the entities tree.					
@@ -772,7 +770,7 @@ $(function() {
 		                        });
 							} // End of the delete item action
 						} // End of the delete item
-					} // End of return list of items in the context menu
+					}; // End of return list of items in the context menu
 				} // End of items in the context menu
 			}, // End of context menu definitions
 			plugins: ["contextmenu"]
@@ -795,7 +793,8 @@ $(function() {
 			select: 'single'
 		}); // End of #entitiesTable - DataTable constructor
 		*/
-	}; // End of initEntitiesTab
+		$("#entitiesViewerTabSet").tabs();
+	} // End of initEntitiesTab
 
 
 	/**
@@ -815,7 +814,7 @@ $(function() {
 		$("#sendEvent").click(function() {
 			// If there is no data, then nothing further to do.
 			var eventData = $("#eventData").val().trim();
-			if (eventData.length == 0) {
+			if (eventData.length === 0) {
 				return;
 			}
 			// Send the event to DSI.
@@ -830,7 +829,7 @@ $(function() {
 		
 		// Disable the Send button if there is no input
 		$("#eventData").on("input", function() {
-			var enable = $("#eventData").val().trim().length>0?"enable":"disable"
+			var enable = $("#eventData").val().trim().length>0?"enable":"disable";
 			$("#sendEvent").button(enable);
 			$("#eventSaveButton").button(enable);
 		});
@@ -864,7 +863,7 @@ $(function() {
 	    	autoHide: true, // Should the menu disappear when the mouse moves out of the trigger area.
 	    	build: function(triggerElement, e) {
 	    		var bomModel = getSolutionModel();
-	    		if (bomModel == null) {
+	    		if (bomModel === null) {
 	    			return false;
 	    		}
 
@@ -872,7 +871,7 @@ $(function() {
 	    		var itemCallback = function(itemKey, opt) {
 	    			var selectedEvent = getEventByName(itemKey);
 	    			var replaceFunction = function() {
-	        			if (selectedEvent == null) {
+	        			if (selectedEvent === null) {
 	        				return;
 	        			}
 	        			$("#eventData").val(JSON.stringify(selectedEvent, null, 2));
@@ -900,7 +899,7 @@ $(function() {
 	    		}
 	    	}
 	    }); // End of context menu for event data text area.
-	}; // End of initEventsTab
+	} // End of initEventsTab
 	
 	
 	// The list of entities to display.  Each entry is an object of the form:
@@ -932,7 +931,7 @@ $(function() {
 		$("#mapEntityTypes").change(function() {
 			var selectedEntityType = $("#mapEntityTypes option:selected").val();
 			var model = getModelFromEntityType(selectedEntityType);
-			if (model == null) {
+			if (model === null) {
 				return;
 			}
 			// Now .. let us see if this type contains a Point.  We do this by looking at each of the
@@ -945,25 +944,25 @@ $(function() {
 					return false;
 				}
 			});
-			if (pointProperty != null) {
+			if (pointProperty !== null) {
 				mapEntitiesToDisplay.push({entityType: selectedEntityType, property: pointProperty, propertyType: "point", idName: model["$IdAttrib"] });
 			}
 		});
 		
 		$("#mapPollStart").button().click(function(){
 			// If there is a timer already counting down, cancel it.
-			if (mapPollingId != null) {
+			if (mapPollingId !== null) {
 				clearTimeout(mapPollingId);
 			}
 			var timeOutFunction = function() {
 				mapPollingId = null;
 				
-				if (mapEntitiesToDisplay.length == 0) {
+				if (mapEntitiesToDisplay.length === 0) {
 					return;
 				}
 
 				var solution = getSelectedSolution();
-				if (solution == null) {
+				if (solution === null) {
 					return;
 				}
 
@@ -989,9 +988,9 @@ $(function() {
 				});
 				
 				DSIREST.listEntityInstances(solution.name, entityType).done(function(data){
-					if (data != null && data.entities != null) {
+					if (data !== null && data.entities !== null) {
 						$.each(data.entities, function(index, value){
-							if (value[geoProperty] == null) {
+							if (value[geoProperty] === null) {
 								return true;
 							}
 							var id       = value[idName];
@@ -1005,7 +1004,7 @@ $(function() {
 // new marker.  If we HAVE previously drawn a marker, then we update the position of that marker so that it
 // appears at the new location.
 	
-							if (mapMarkers[markerId] == null) {
+							if (mapMarkers[markerId] === null) {
 								var newMarker = gmap.addMarker({
 									lat: lat,
 									lng: lng,
@@ -1041,7 +1040,7 @@ $(function() {
 		}); // End of mapPollStart -> click
 		
 		$("#mapPollStop").button().click(function() {
-			if (mapPollingId != null) {
+			if (mapPollingId !== null) {
 				clearTimeout(mapPollingId);
 				mapPollingId = null;
 			}
@@ -1049,7 +1048,7 @@ $(function() {
 			$("#mapPollStart").button("enable");
 		}).button("disable");// End of mapPollStop -> click
 
-	}; // End of initMapTab
+	} // End of initMapTab
 	
 	
 	/**
@@ -1062,7 +1061,7 @@ $(function() {
 	 */
 	function resetMapTab() {
 		var selectedSolution = getSelectedSolution();
-		if (selectedSolution == null) {
+		if (selectedSolution === null) {
 			return;
 		}
 		
@@ -1074,44 +1073,132 @@ $(function() {
 				listBox.append($("<option>", {value: value, text: value}));
 			});
 		});
-	}; // End of resetMapTab
+	} // End of resetMapTab
 	
 	/**
 	 * @private
 	 * @function
 	 * @memberOf main
+	 * @description
+	 * Initialize the logs tab.  There is a back-end tail server that is a responsible for sending us
+	 * the tail data from the file being followed.  This server is a Web Socket based entity.  When
+	 * connected, it expects a messaage of the form:
+	 * {
+	 *   fileName: <fileName> // The full path to the file to be tailed.
+	 *   sendAll: <boolean>   // [Optional] - if true, then the initial content of the file will be sent.
+	 *                        //  If omitted, then we assume a default of false.
+	 * }
 	 */
 	function initLogsTab() {
-	  var ws = new WebSocket("wss://localhost:3000");
-	  ws.onopen = function() {
-	    console.log("Connection opened!");
-	    const LOGFILE = "C:/IBM/ODMInsights88/runtime/wlp/usr/servers/cisDev/logs/messages.log";
-	    options = {
-	      fileName: LOGFILE,
-	      sendAll: true
-	    };
-	    ws.send(JSON.stringify(options));
-	  };
-	  ws.onmessage = function(messageEvent) {
-	    console.log("We saw a message!");
-	    // event.data = line
-	    var tr = $("<tr>");
-	    var td = $("<td>");
-	    td.text(messageEvent.data);
-	    tr.append(td);
-	    $("#tailTbody").append(tr);
-	  };
-	  ws.onclose = function(closeEvent) {
-	    console.log("Web Socket closed! code=%d, reason=%s", closeEvent.code, closeEvent.reason);
-	  };
-	  ws.onerror = function() {
-	    console.log("Web Socket error!");
+	// Connect to the tail server 
+	  var ws = null;
+	  var doTail = function() {
+        $("#tailScrollContainer").scrollTop($("#tailTable").height());
 	  };
 	  
+	  var connect = function() {	
+		  // Remove existing content
+		  $("#tailTbody").empty();
+		  let ws = new WebSocket("wss://" + window.location.hostname + ":3000");
+		  ws.onopen = function() {
+		    console.log("Connection opened!");
+		    
+		    let settings = getSettings();
+		    options = {
+		      fileName: settings.logFileName,
+		      sendAll: true
+		    };
+		    ws.send(JSON.stringify(options));
+		  };
+		  
+		  // Handle the arrival of a new message from the tail server which will be a line
+		  // of data to add to the output.
+		  ws.onmessage = function(messageEvent) {
+		    // event.data = line
+		    var tr = $("<tr>");
+		    var td = $("<td>");
+		    td.text(messageEvent.data);
+		    tr.append(td);
+		    $("#tailTbody").append(tr);
+		    // If the UI says we are tailing, then tail.
+		    if ($("#tailFollow").is(":checked")) {
+		    	doTail();
+		    }
+		  }; // End of onMessage handler.
+		  
+		  ws.onclose = function(closeEvent) {
+		    console.log("Web Socket closed! code=%d, reason=%s", closeEvent.code, closeEvent.reason);
+		  };
+		  
+		  ws.onerror = function() {
+		    console.log("Web Socket error!");
+		  };
+		  
+		  return ws;
+	  }
+	  
+	  // Handle the bottom button being pressed.
 	  $("#tailBottom").button().click(function() {
-	    $("#tailScrollContainer").scrollTop($("#tailTable").height());
+	    doTail();
 	  });
-	};
+	  
+	  // Handle the reconnect button being pressed.
+	  $("#tailReconnect").button().click(function() {
+		  if (ws !== null) {
+			  ws.close();
+		  }
+		  ws = connect();
+	  });
+	  
+	  // Handler the clear button being pressed.
+	  $("#tailClear").button().click(function() {
+		  $("#tailTbody").empty(); 
+	  });
+	} // End of initLogsTab
+	
+	
+	/**
+	 * @private
+	 * @memberOf main
+	 * @function
+	 */
+	function initAboutTab() {
+	    $("#settingsDialog").dialog({
+	    	autoOpen: false,
+	    	modal: true,
+	    	resizable: false,
+	    	title: "Settings",
+	    	width: "600px",
+	    	buttons: [{
+	    		text: "Save",
+	    		click: function() {
+	    			saveSettings({
+	    				hostname: $("#hostnameSettings").val(),
+    					port: $("#portSettings").val(),
+    					logFileName: $("#logFileNameSettings").val()
+	    			});
+	    			$(this).dialog("close");
+	    		}
+	    	}, {
+	    		text: "Cancel",
+	    		click: function() {
+	    			$(this).dialog("close");
+	    		}
+	    	}]
+	    });
+	    $("#settingsAbout").button().click(function() {
+	    	let settings = getSettings();
+	    	$("#hostnameSettings").val(settings.hostname);
+	    	$("#portSettings").val(settings.port);
+	    	$("#logFileNameSettings").val(settings.logFileName);
+	    	$("#settingsDialog").dialog("open");
+	    });
+	    
+	    // Clear local storage
+	    $("#clearLocalStorageSettings").button().click(function() {
+	    	localStorage.clear();
+	    });
+	}
 	
 	/**
 	 * @private
@@ -1188,7 +1275,7 @@ $(function() {
 	    		click: function() {
 	    			// Determine which item in the savedEventsTable was selected
 	    			var savedEvent = $("#savedEventsTable").DataTable().row({selected: true}).data();
-	    			if (savedEvent != null) {
+	    			if (savedEvent !== null) {
 	    				deleteSavedEvent(savedEvent.name);
 	    				updateSavedEventsTable();
 	    			}
@@ -1259,7 +1346,7 @@ $(function() {
 		
 		function updateSavedEventsTable() {
 			var savedEvents = localStorage.getObject("savedEvents");
-			if (savedEvents == null || savedEvents.length == 0) {
+			if (savedEvents === null || savedEvents.length === 0) {
 				$("#loadEventDialog_Table").hide();
 				$("#loadEventDialog_TableNoData").show();
 			} else {
@@ -1267,8 +1354,8 @@ $(function() {
 				$("#loadEventDialog_TableNoData").hide();
 				$("#savedEventsTable").DataTable().clear().rows.add(savedEvents).draw();
 			}
-		};
-	}; // End of initEventSaveLoad
+		}
+	} // End of initEventSaveLoad
 	
 	/**
 	 * @private
@@ -1277,7 +1364,7 @@ $(function() {
 	function showError(message) {
 		$("#errorMessage").text(message);
 		$("#errorDialog").dialog("open");
-	}; // End of showError
+	} // End of showError
 	
 	
 	/**
@@ -1296,7 +1383,7 @@ $(function() {
 			return String(property);
 		}
 		if (typeof property == "object") {
-			if (property == null) {
+			if (property === null) {
 				return "<null>";
 			}
 			if (property.hasOwnProperty("$class")) {
@@ -1329,11 +1416,11 @@ $(function() {
 	 */	
 	function loadBOMModels() {
 		var textData = localStorage.getItem("bomModels");
-		if (textData != null) {
+		if (textData !== null) {
 			bomModels = JSON.parse(textData);
 		}
 		return;
-	}; // End of loadBOMModles
+	} // End of loadBOMModles
 
 	/**
 	 * Save BOM models to the localStorage.
@@ -1349,31 +1436,31 @@ $(function() {
 	 */	
 	function saveBOMModels() {
 		localStorage.setItem("bomModels", JSON.stringify(bomModels));
-	}; // End of saveBOMModels
+	} // End of saveBOMModels
 
 
 	/**
 	 * Get the BOM model for a given solution.
-	 * @function
+	 * @function 
 	 * @private
 	 * @memberOf main
 	 * @description
 	 * Get the BOM model for the solution or the currently selected solution.
 	 */
 	function getSolutionModel(solutionName) {
-		if (solutionName == null) {
+		if (solutionName === null) {
 			var solution = getSelectedSolution();
-			if (solution == null) {
+			if (solution === null) {
 				return null;
 			}
 			solutionName = solution.name
 		}
 		var bomModel = bomModels[solutionName]; // This may be null
-		if (bomModel == null) {
+		if (bomModel === null) {
 			return null;
 		}
 		return bomModel.bomModel;
-	}; // End of getSolutionModel
+	} // End of getSolutionModel
 
 	
 	/**
@@ -1387,7 +1474,34 @@ $(function() {
 	function setSolutionModel(solutionName, model) {
 		bomModels[solutionName] = {bomModel: model, lastUpdated: new Date()};
 		saveBOMModels();
-	}; // End of setSolutionModel
+	} // End of setSolutionModel
+	
+	/**
+	 * @module main
+	 * @function
+	 * @private 
+	 */
+	function getSettings() {
+		let settings = localStorage.getObject("settings");
+		if (settings === null) {
+			settings = {
+				hostname: "localhost",
+				port: 9443,
+				logFileName: "C:/IBM/ODMInsights88/runtime/wlp/usr/servers/cisDev/logs/messages.log"
+			};
+		}
+		return settings;
+	}
+	
+	/**
+	 * @module main
+	 * @function
+	 * @private 
+	 * @param settings
+	 */
+	function saveSettings(settings) {
+		localStorage.setObject("settings", settings);
+	}
 	
 	refreshSolutions();
 }); // End of on load

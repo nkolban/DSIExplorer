@@ -61,9 +61,16 @@
 .tailTable {
 	font-family: monospace;
 	background: white;
-	//border-spacing: 0px;
-	//border-color: lightgrey;
-};
+}
+
+.form label {
+	display: inline-block;
+	width: 6em;
+}
+
+.form div {
+	margin-bottom: 5px;
+}
 
 </style>
 
@@ -78,7 +85,6 @@
 			<li><a href="#globalPropertiesTab">Global Properties</a></li>
 			<li><a href="#mapTab">Map</a>
 			<li><a href="#logsTab">Logs</a>			
-			<li><a href="#debuggingTab">Debugging</a></li>
 			<li><a href="#aboutTab">About</a></li>
 		</ul>
 <!--
@@ -88,12 +94,14 @@
 -->	
 		<div id="solutionsTab">
 			<div style="display: flex; flex-direction: column; height:100%">
-				<table id="solutions" style="flex-grow: 1;"></table>
+				<div style="flex-grow: 1;">
+					<table id="solutions" style="height: 100%;"></table>
+				</div>
 				<div style="margin-top: 5px;">
-					<button id="stop" class="dsi_enableOnSolution">Stop</button>
+					<button id="stop"     class="dsi_enableOnSolution">Stop</button>
 					<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
 					<button id="activate" class="dsi_enableOnSolution">Activate</button>			
-					<button id="refresh" class="dsi_enableOnSolution">Refresh</button>	
+					<button id="refresh"  class="dsi_enableOnSolution">Refresh</button>	
 					<input id="bomFileUpload" type="file" name="thefile" class="myHide">
 				</div>
 			</div>
@@ -133,15 +141,25 @@
 					<button id="deleteAllEntities" class="dsi_enableOnEntityType" >Delete All</button>
 				</div>
 			</div>
-			
-			<p>
-				<button id="collapseAll">Collapse all</button>
-				<button id="expandAll">Expand all</button>
-			</p>
-			<div class="myBorder" style="margin-bottom: 10px; background-color: white;">
-				<div id="entitiesTree" style="height: 400px; overflow: auto;"></div>
-			</div>
-			<div id="entitiesTableDiv">
+			<div id="entitiesViewerTabSet">
+				<ul>
+					<li><a href="#entitiesViewerTreeTab">Tree view</a></li>
+					<li><a href="#entitiesViewerTableTab">Table view</a></li>
+				</ul>
+
+				<div id="entitiesViewerTreeTab">
+					<div style="margin-bottom: 5px;">
+						<button id="collapseAll">Collapse all</button>
+						<button id="expandAll">Expand all</button>
+					</div>
+					<div class="myBorder" style="margin-bottom: 10px; background-color: white;">
+						<div id="entitiesTree" style="height: 400px; overflow: auto;"></div>
+					</div>
+				</div>
+				<div id="entitiesViewerTableTab">
+					<div id="entitiesTableDiv">
+					</div>
+				</div>
 			</div>
 			<!-- <table id="entitiesTable"></table> -->
 
@@ -170,8 +188,8 @@
 			<div style="margin-top: 5px;">
 				<label for="mapEntityTypes" style="vertical-align: top;">Entity Types to display:</label>
 				<select id="mapEntityTypes" size="5" style="min-width: 12em;"></select>
-				<button id="mapPollStart" style="vertical-align: top;">Start</button>
-				<button id="mapPollStop" style="vertical-align: top;">Stop</button>
+				<button id="mapPollStart"   style="vertical-align: top;">Start</button>
+				<button id="mapPollStop"    style="vertical-align: top;">Stop</button>
 			</div>
 			</div>
 		</div>
@@ -183,7 +201,7 @@
 -->
 	<div id="logsTab">
 		<div style="display: flex; flex-direction: column; align-items: flex-start; height: 100%;">
-			<div id="tailScrollContainer" style="height: 500px; width: 100%; overflow: auto; flex-grow:1;">
+			<div id="tailScrollContainer" style="height: 500px; width: 100%; overflow: auto; flex-grow:1; border: 1px solid lightgrey; border-right-width: 2px;">
 				<table id="tailTable" class="tailTable">
 					<tbody id="tailTbody"></tbody>
   				</table>
@@ -192,19 +210,11 @@
   			  	<label for="tailFollow">Follow: </label>
   				<input type="checkbox" id="tailFollow">
   				<button id="tailBottom">Bottom</button>
+  				<button id="tailClear">Clear</button>
+  				<button id="tailReconnect">Reconnect</button>
   			</div>
   		</div>
   	</div>
-<!--
-
-*** DEBUGGING ***
-
--->			
-		<div id="debuggingTab">
-		<p>This page contains debugging controls used during development of DSI Explorer.  This page will
-		not be shown in non-development distributions</p>
-			<button id="clearLocalStorage">Clear Local Storage</button> - Clear the local storage for the application.
-		</div>
 		
 <!--
 
@@ -223,6 +233,7 @@
 			<ul>
 			<li>Neil Kolban (kolban@us.ibm.com)</li>
 			</ul>
+			<button id="settingsAbout">Settings</button>
 		</div>
 	</div>
 	</div> <!-- End of layout center -->
@@ -253,6 +264,25 @@
 	</div>
 	<div id="errorDialog">
 		<span id="errorMessage"></span>
+	</div>
+	
+	<div id="settingsDialog" class="form">
+	<!-- 
+		<div>
+			<label for="hostnameSettings">Hostname:</label>
+			<input id="hostnameSettings" type="text">
+		</div>
+		<div>
+			<label for="portSettings">Port:</label>
+			<input id="portSettings" type="number">
+		</div>
+		-->
+		<div>
+			<label for="logFileNameSettings">Log File:</label>
+			<input id="logFileNameSettings" type="text" style="width: 400px;">
+			<hr/>
+			<button id="clearLocalStorageSettings" style="margin-top: 5px;">Clear Local Storage</button>
+		</div>
 	</div>
 </body>
 </html>
