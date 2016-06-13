@@ -4,20 +4,23 @@
 <meta charset="ISO-8859-1">
 <title>DSI Explorer</title>
 
-<link href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" />
+<link href="//code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" />
 
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.11/css/dataTables.jqueryui.min.css"/>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.1.2/css/select.jqueryui.min.css"/>
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.0/themes/default/style.min.css" />
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.11/css/dataTables.jqueryui.min.css"/>
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/select/1.1.2/css/select.jqueryui.min.css"/>
+<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jstree/3.3.0/themes/default/style.min.css" />
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 
-<script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/dataTables.jqueryui.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.0/jstree.min.js"></script>
+<script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/dataTables.jqueryui.min.js"></script>
+<script type="text/javascript" src="//cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
+<script type="text/javascript" src="//cdn.datatables.net/plug-ins/1.10.11/features/pageResize/dataTables.pageResize.min.js"></script>
+
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstree/3.3.0/jstree.min.js"></script>
 
 <link rel="stylesheet" type="text/css" href="lib/jQuery-File-Upload-9.12.3/css/jquery.fileupload.css" />
 <link rel="stylesheet" type="text/css" href="lib/jQuery-File-Upload-9.12.3/css/jquery.fileupload-ui.css" />
@@ -72,6 +75,10 @@
 	margin-bottom: 5px;
 }
 
+div.dataTables_length {
+    display: none;
+}
+
 </style>
 
 </head>
@@ -95,13 +102,13 @@
 		<div id="solutionsTab">
 			<div style="display: flex; flex-direction: column; height:100%">
 				<div style="flex-grow: 1;">
-					<table id="solutions" style="height: 100%;"></table>
+					<table id="solutions" class="display pageResize"></table>
 				</div>
 				<div style="margin-top: 5px;">
 					<button id="stop"     class="dsi_enableOnSolution">Stop</button>
 					<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
 					<button id="activate" class="dsi_enableOnSolution">Activate</button>			
-					<button id="refresh"  class="dsi_enableOnSolution">Refresh</button>	
+					<button id="refresh">Refresh</button>	
 					<input id="bomFileUpload" type="file" name="thefile" class="myHide">
 				</div>
 			</div>
@@ -122,6 +129,9 @@
 					<button id="eventHistory">History</button>
 					<button id="eventSaveButton">Save</button>
 					<button id="eventLoadButton">Load</button>
+				</div>
+				<div style="margin-top: 5px;">
+					<span id="eventMessage"></span>
 				</div>
 			</div>
 		</div>
@@ -184,6 +194,7 @@
 			<div style="margin-top: 5px;">
 				<label for="mapPollInterval">Poll Interval (seconds):</label>
 				<input id = "mapPollInterval" type="number" min="1" value="5" style="width: 2.5em;">
+				<button id="mapCommandsOpen">Commands</button>
 			</div>
 			<div style="margin-top: 5px;">
 				<label for="mapEntityTypes" style="vertical-align: top;">Entity Types to display:</label>
@@ -247,13 +258,24 @@
 	<div id="confirmReplace">
 		<p>Confirm replacement of existing event data.</p>
 	</div>
-	
+
+<!--
+eventHistoryDialog 
+-->	
 	<div id="eventHistoryDialog">
 		<table id="eventHistoryTable"></table>
 	</div>
+
+<!--
+saveEventDialog 
+-->
 	<div id="saveEventDialog">
 		<span>Name: &nbsp;</span><input type="text" id="saveEventName">
 	</div>
+
+<!--
+loadEventDialog
+-->
 	<div id="loadEventDialog">
 		<div id="loadEventDialog_Table">
 			<table id="savedEventsTable"></table>
@@ -262,6 +284,21 @@
 			No saved events.
 		</div>
 	</div>
+
+<!--
+mapCommandsDialog 
+-->
+	<div id="mapCommandsDialog">
+		<textarea id="mapCommandsTextarea" style="width: 100%; max-width: 100%; font-family: 'courier new'"></textarea>
+		<div>
+			<button id="mapCommandsSave">Save</button>
+			<button id="mapCommandsLoad">Load</button>
+		</div>
+	</div>
+
+<!--
+errorDialog 
+-->	
 	<div id="errorDialog">
 		<span id="errorMessage"></span>
 	</div>

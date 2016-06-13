@@ -56,8 +56,7 @@ var DSIREST = (function(){
 	 * <li>$Namespace is a special property that is the namespace of the event.</li>
 	 * </ul>
 	 */
-	function _JSON2XML(eventJSON) {
-		var event = JSON.parse(eventJSON);
+	function _OBJECT2XML(event) {
 		var eventName = event["$Name"].split(".")[1];
 		var eventXML = "<?xml version='1.0' encoding='UTF-8'?>" +
 		"<m:" + eventName + " xmlns:m='" + event["$Namespace"] + "' " +
@@ -69,7 +68,7 @@ var DSIREST = (function(){
 		});
 		eventXML += "</m:" + eventName + ">";
 		return eventXML;
-	}; // End of _JSON2XML
+	}; // End of _OBJECT2XML
 
 
 	// Return the object that is DSIREST
@@ -207,12 +206,26 @@ var DSIREST = (function(){
 		 * @param event - A JSON string that represents the event to be sent.
 		 * @returns
 		 */
-		sendEvent: function(solution, event) {
-			var xmlEvent = {
-				data: _JSON2XML(event),
-				contentType: "application/xml"
-			};
-			return this._doPOST("/ibm/ia/gateway/" + solution, null, xmlEvent);
+		sendEvent: function(solution, eventJSON) {
+			var that = this;
+			var event = JSON.parse(eventJSON);
+			if (Array.isArray(event)) {
+				let defItems = [];
+				$.each(event, function(index, item){
+					var xmlEvent = {
+						data: _OBJECT2XML(item),
+						contentType: "application/xml"
+					};
+					defItems.push(that._doPOST("/ibm/ia/gateway/" + solution, null, xmlEvent));
+				});
+				return $.when.apply($, defItems);
+			} else {
+				let xmlEvent = {
+					data: _OBJECT2XML(event),
+					contentType: "application/xml"
+				};
+				return this._doPOST("/ibm/ia/gateway/" + solution, null, xmlEvent);
+			}
 		} // End of sendEvent
 	};
 })();

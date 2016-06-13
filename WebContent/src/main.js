@@ -1,5 +1,5 @@
 /**
- * @module DSIExplorer
+ * @module DSIExplorer 
  */
 
 /**
@@ -28,7 +28,7 @@
  * {
  *   name: <Deprecated>,
  *   data: <The text of the event>,
- *   timestamp: <The date that the event was sent>
+ *   timestamp: <The date that the event was sent> 
  * } 
  */
 /**
@@ -133,7 +133,7 @@ $(function() {
 	/**
 	 * @private
 	 * @memberOf main
-	 * @description
+	 * @description 
 	 */
 	function entityToTreeNode(entity) {
 		var entityNode = {
@@ -177,7 +177,7 @@ $(function() {
 		var treeNodes = [];
 		
 		// It is possible we will not have any entities
-		if (entities !== null) {
+		if (entities !== null && entities != undefined) {
 			// Iterate over each of the entities
 			$.each(entities.entities, function(index, entity){
 				treeNodes.push(entityToTreeNode(entity));
@@ -318,15 +318,19 @@ $(function() {
 	 * @function
 	 * @private
 	 * @memberOf main
+	 * @description
+	 * Examine the BOM model for the current solution looking for the template of the event
+	 * whos type is supplied as a parameter.  Null is returned if there is no BOM model or
+	 * the event type can not be found.
 	 */
-	function getEventByName(name) {
+	function getEventByName(eventType) {
 		var bomModel = getSolutionModel();
 		if (bomModel === null) {
 			return null;
 		}
 		var ret = null;
 		$.each(bomModel.events, function(index, value) {
-			if (value["$Name"] == name) {
+			if (value["$Name"] == eventType) {
 				ret = value;
 			}
 		});
@@ -436,6 +440,7 @@ $(function() {
 	 * @private
 	 * @function
 	 * @memberOf main
+	 * General initialization.
 	 */
 	function initGeneral() {
 		$("#errorDialog").dialog({
@@ -457,6 +462,8 @@ $(function() {
 	 * @function
 	 * @private
 	 * @memberOf main
+	 * @description
+	 * Initialize the global properties tab.
 	 */
 	function initGlobalPropertiesTab() {
 		$('#globalProperties').DataTable({
@@ -474,7 +481,9 @@ $(function() {
 		DSIJMX.listGlobalProperties(function(data) {
 			var values = [];
 			$.each(data, function(index, propertyName) {
-				values.push({ name: propertyName, value: "XXX"});
+				values.push({ name: propertyName, value: "N/A"});
+				// As of 2016-06-08 this doesn't work.  PMR 29569,004,000 has been raised.
+				//DSIJMX.getGlobalProperty(propertyName, function() {});
 			});
 			$('#globalProperties').DataTable().clear().rows.add(values).draw();
 		});
@@ -485,16 +494,17 @@ $(function() {
 	 * @private
 	 * @memberOf main
 	 * @description
-	 *  
+	 * Initialize the solutions tab.
 	 */
 	function initSolutionsTab() {
 
 // Define the structure and options of the solutions table
 		var table = $('#solutions').DataTable({
+			pageResize: true,
 			autoWidth: false,
 			searching: false,
 			scrollCollapse: false,
-			paging: false,
+			//paging: false,
 			info: false,
 			"columns": [
 			   { data: "name",    title: "Solution Name" },
@@ -510,9 +520,7 @@ $(function() {
 						   event.stopPropagation();
 						   console.log("BOM Load requested!");
 						   var row = $(this).data("row");
-						   //debugger;
 						   table.row(row).select();
-						   //debugger;
 						   $("#bomFileUpload").click();
 					   }).data("row", row);
 					   $(td).append(b);
@@ -678,7 +686,7 @@ $(function() {
 			// Ask DSI for the list of entities.
 			DSIREST.listEntityInstances(solution.name, selectedEntityType).done(function(data){
 				entitiesToTree(data);
-				if (data !== null) {
+				if (data !== null && data !== undefined) {
 					$("#entitiesTable").DataTable().rows.add(data.entities).draw();
 				}
 			});
@@ -747,7 +755,6 @@ $(function() {
 		                        		}
 		                        	});
 		                        	//$("#entitiesTree").jstree(true).redraw();
-		                        	//debugger;
 		                        	$("#entitiesTree").jstree(true).refresh_node(node);
 		                        });
 							} // End of the refresh item action
@@ -786,7 +793,6 @@ $(function() {
 			"columns": [
 			   { data: "name",    title: "Name" },
 			   { data: "lastUpdated", title: "Date", render: function(data, type, row, meta) {
-				   //debugger;
 				   return new Date(data).toLocaleString();
 			   }}
 			],
@@ -817,6 +823,7 @@ $(function() {
 			if (eventData.length === 0) {
 				return;
 			}
+			
 			// Send the event to DSI.
 			DSIREST.sendEvent(solutionToSimpleName(getSelectedSolution()), eventData).then(function() {
 				// On success, save the event we just sent to the history of previously sent events.
@@ -825,6 +832,7 @@ $(function() {
 				// On error
 				showError(errorObj.responseJSON.message);
 			});
+			$("#eventMessage").text("Event sent at " + new Date().toLocaleString());
 		});
 		
 		// Disable the Send button if there is no input
@@ -1048,6 +1056,64 @@ $(function() {
 			$("#mapPollStart").button("enable");
 		}).button("disable");// End of mapPollStop -> click
 
+		// Create the map commands dialog
+	    $("#mapCommandsDialog").dialog({
+	    	autoOpen: false,
+	    	modal: true,
+	    	resizable: false,
+	    	title: "Map Commands",
+	    	width: "600px",
+	    	buttons: [{
+	    		text: "Run",
+	    		click: function() {
+	    			// Process the map commands.
+	    			var mapCommandsJSON = $("#mapCommandsTextarea").val();
+	    			var commands = JSON.parse(mapCommandsJSON);
+	    			// Format
+	    			// [ Command, ...]
+	    			// Where Command is:
+	    			// {
+	    			//   command: <type>
+	    			//   ...
+	    			// }
+	    			// Commands include:
+	    			// polygon - draw a polygon
+	    			// - Paths: an array of LatLng coordinates.
+	    			//
+	    			$.each(commands, function(index, command) {
+	    				if (command.command == "polygon") {
+	    					var polygonOptions = {
+	    						paths: command.paths,
+	    					    strokeColor: '#FF0000',
+	    					    strokeOpacity: 0.8,
+	    					    strokeWeight: 2,
+	    					    fillColor: '#FF0000',
+	    					    fillOpacity: 0.35
+	    					}
+		    				gmap.drawPolygon(polygonOptions);
+	    				}; // End of command == polygon
+	    			});
+	    			$(this).dialog("close");
+	    		} // End of Run button click
+	    	}, {
+	    		text: "Cancel",
+	    		click: function() {
+	    			$(this).dialog("close");
+	    		}
+	    	}]
+	    }); // End of create mapCommandsDialog
+	    
+	    $("#mapCommandsOpen").button().click(function() {
+	    	$("#mapCommandsDialog").dialog("open");
+	    });
+	    
+	    $("#mapCommandsSave").button().click(function() {
+	    	localStorage.setItem("mapCommands", $("#mapCommandsTextarea").val());
+	    });
+	    $("#mapCommandsLoad").button().click(function() {
+	    	$("#mapCommandsTextarea").val(localStorage.getItem("mapCommands"));
+	    });
+	    
 	} // End of initMapTab
 	
 	
@@ -1130,8 +1196,9 @@ $(function() {
 		    console.log("Web Socket closed! code=%d, reason=%s", closeEvent.code, closeEvent.reason);
 		  };
 		  
-		  ws.onerror = function() {
-		    console.log("Web Socket error!");
+		  ws.onerror = function(event) {
+			debugger;
+		    console.log("Web Socket error! : " + event);
 		  };
 		  
 		  return ws;
@@ -1250,7 +1317,6 @@ $(function() {
 			"columns": [
 			   { data: "name",    title: "Name" },
 			   { data: "lastUpdated", title: "Date", render: function(data, type, row, meta) {
-				   //debugger;
 				   return new Date(data).toLocaleString();
 			   }}
 			],
@@ -1328,7 +1394,7 @@ $(function() {
 	    
 // Initialize the event history table.  This table is used to show the set of events that have been
 // previously sent.	    
-		$('#eventHistoryTable').DataTable({
+		let eventHistoryTable = $('#eventHistoryTable').DataTable({
 			"autoWidth": false,
 			"searching": false,
 			"paging": true,
@@ -1336,12 +1402,19 @@ $(function() {
 			"columns": [
 			   { data: "name",    title: "Name" },
 			   { data: "timestamp", title: "Date", render: function(data, type, row, meta) {
-				   //debugger;
 				   return new Date(data).toLocaleString();
 			   }}
 			],
 			"order": [[1, "desc"]],
 			"select": 'single'
+		});
+		
+// If the user double clicks on a row then use the saved data and close the
+// the dialog.
+		$("#eventHistoryTable tbody").on("dblclick", "tr", function() {
+			var data = eventHistoryTable.row(this).data();
+			$("#eventData").val(data.data);
+			$("#eventHistoryDialog").dialog("close");
 		});
 		
 		function updateSavedEventsTable() {
@@ -1448,15 +1521,15 @@ $(function() {
 	 * Get the BOM model for the solution or the currently selected solution.
 	 */
 	function getSolutionModel(solutionName) {
-		if (solutionName === null) {
+		if (solutionName === null || solution === undefined) {
 			var solution = getSelectedSolution();
-			if (solution === null) {
+			if (solution === null || solution === undefined) {
 				return null;
 			}
 			solutionName = solution.name
 		}
 		var bomModel = bomModels[solutionName]; // This may be null
-		if (bomModel === null) {
+		if (bomModel === null || bomModel === undefined) {
 			return null;
 		}
 		return bomModel.bomModel;

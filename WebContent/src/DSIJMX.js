@@ -1,4 +1,7 @@
 var DSIJMX = (function() {
+	var baseUrl = window.location.protocol + "//" + window.location.host;
+	var username = "tester";
+	var password = "tester";
 	/**
 	 * @private
 	 */
@@ -10,9 +13,9 @@ var DSIJMX = (function() {
 			method: method,
 			data: payload,
 			contentType: "application/json",
-			username: "tester",
-			password: "tester",
-			url: "https://localhost:9449" + path,
+			username: username,
+			password: password,
+			url: baseUrl + path,
 			success: function(data) {
 				callback(data);
 			},
@@ -23,9 +26,11 @@ var DSIJMX = (function() {
 	}; // End of doJMX
 	
 	/**
-	 * Create a REST payload for JMX
+	 * Create a REST payload for JMX 
 	 * @private
-	 * @param Parameters
+	 * @memberOf dsi.DSIJMX
+	 * @param parameters
+	 * @description 
 	 */
 	function toRESTJMXPayload(parameters) {
 		var ret = {
@@ -116,7 +121,9 @@ var DSIJMX = (function() {
 		 * @description
 		 * @memberOf dsi.DSIJMX
 		 * @param {function} callback - The function to be called back.
-		 * Get a list of global properties.
+		 * Get a list of global properties.  The result is a JavaScript array where
+		 * each member of the array is the name of a property.
+		 * See: https://www.ibm.com/support/knowledgecenter/SSQP76_8.8.0/com.ibm.odm.itoa.ref/html/api/html/com/ibm/ia/runtime/management/GlobalPropertiesMXBean.html
 		 */
 		listGlobalProperties: function(callback) {
 			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/listProperties", function(data) {
@@ -125,6 +132,7 @@ var DSIJMX = (function() {
 				}
 			}, "POST", toRESTJMXPayload([]));
 		}, // End of listGlobalProperties
+		
 		
 		/**
 		 * @name DSIJMX#getGlobalProperty
@@ -136,6 +144,7 @@ var DSIJMX = (function() {
 		 */
 		getGlobalProperty: function(propertyName, callback) {
 			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/getProperty", function(data) {
+				debugger;
 				if (callback != null) {
 					callback();
 				}
