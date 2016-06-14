@@ -64,6 +64,22 @@
 .tailTable {
 	font-family: monospace;
 	background: white;
+	border-collapse: collapse;
+	width: 100%;
+	table-layout: fixed;
+}
+
+.tailTable td {
+	white-space: normal;
+	word-wrap: break-word;
+}
+
+.tailTable tr:nth-child(even) {
+	background-color: #F5F5F5;
+}
+
+.tailTable tr:nth-child(odd) {
+	background-color: white;
 }
 
 .form label {
@@ -223,6 +239,7 @@ div.dataTables_length {
   				<button id="tailBottom">Bottom</button>
   				<button id="tailClear">Clear</button>
   				<button id="tailReconnect">Reconnect</button>
+  				<button id="tailHighlights">Highlights</button>
   			</div>
   		</div>
   	</div>
@@ -321,5 +338,54 @@ errorDialog
 			<button id="clearLocalStorageSettings" style="margin-top: 5px;">Clear Local Storage</button>
 		</div>
 	</div>
+
+<!--
+highlightDialog 
+-->
+	<div id="highlightDialog">
+		<div style="display: flex; flex-direction: column; height:100%">
+			<textarea id="highlightTextarea" style="width: 100%; max-width: 100%; font-family: 'courier new'; flex-grow: 1;"></textarea>
+			<div id="highlightsTable"></div>
+			<div>
+				<button id="tailAddHighlight">Add</button>
+			</div>
+			<fieldset style="margin-top: 15px;">
+			<legend>WAS Format:</legend>
+			<div>
+				<label for="tailWASFormat">Enable:</label>
+				<input type="checkbox" id="tailWASFormat">
+				<label for="tailFormatDate">Date:</label>
+				<input type="checkbox" id="tailFormatDate">
+				<label for="tailFormatThread">Thread:</label>
+				<input type="checkbox" id="tailFormatThread">
+				<label for="tailFormatModule">Module:</label>
+				<input type="checkbox" id="tailFormatModule">
+				<label for="tailFormatType">Type:</label>
+				<input type="checkbox" id="tailFormatType">
+			</div>
+			</fieldset>
+		</div>
+	</div>
+
+<!--
+editHighlightDialog 
+-->
+	<div id="editHighlightDialog">
+		<div class="form">
+		<div>
+			<label for="editHighlightRegex">Expression:</label>
+			<input type="text" id="editHighlightRegex" style="width: 24em;">
+		</div>
+		<div class="form">
+			<label for="editHighlightForeground">Foreground:</label>
+			<input id="editHighlightForeground" type="color">
+		</div>
+		<div class="form">
+			<label for="editHighlightBackground">Background:</label>
+			<input id="editHighlightBackground" type="color">
+		</div>
+		</div>
+	</div>
+
 </body>
 </html>

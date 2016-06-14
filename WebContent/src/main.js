@@ -28,7 +28,7 @@
  * {
  *   name: <Deprecated>,
  *   data: <The text of the event>,
- *   timestamp: <The date that the event was sent> 
+ *   timestamp: <The date that the event was sent>  
  * } 
  */
 /**
@@ -60,6 +60,16 @@ $(function() {
 	 * The map object.  See gmaps.js package.
 	 */
 	var gmap;
+	
+	/**
+	 * An array of highlights objects.  Each object can contain:
+	 * {
+	 *   background: <color>,
+	 *   foreground: <color>,
+	 *   bold: <true|false>
+	 * }
+	 */
+	var _highlights=[];
 
 	/**
 	 * @memberOf main
@@ -469,10 +479,10 @@ $(function() {
 		$('#globalProperties').DataTable({
 			autoWidth: false,
 			searching: false,
-			scrollY: "400px",
-			paging: false,
-			info: false,
-			select: 'single',
+			scrollY:   "400px",
+			paging:    false,
+			info:      false,
+			select:   'single',
 			"columns": [
 			   { data: "name",  title: "Name" },
 			   { data: "value", title: "Value" }
@@ -500,9 +510,9 @@ $(function() {
 
 // Define the structure and options of the solutions table
 		var table = $('#solutions').DataTable({
-			pageResize: true,
-			autoWidth: false,
-			searching: false,
+			pageResize:     true,
+			autoWidth:      false,
+			searching:      false,
 			scrollCollapse: false,
 			//paging: false,
 			info: false,
@@ -676,10 +686,10 @@ $(function() {
 				$("#entitiesTable").DataTable({
 					autoWidth: false,
 					searching: false,
-					paging: true,
-					info: false,
+					paging:    true,
+					info:      false,
 					"columns": columns,
-					select: 'single'
+					select:    'single'
 				}); // End of #entitiesTable - DataTable constructor
 			}
 			
@@ -844,18 +854,20 @@ $(function() {
 		
 		// Create a confirm replace dialog.
 	    $("#confirmReplace").dialog({
-	    	autoOpen: false,
-	    	modal: true,
+	    	autoOpen:  false,
+	    	modal:     true,
 	    	resizable: false,
-	    	title: "Confirm replace",
-	    	buttons: [{
+	    	title:     "Confirm replace",
+	    	buttons: [
+	    	{
 	    		text: "Replace",
 	    		click: function() {
 	    			// When clicked, invoke the replace function
 	    			$("#eventData").data("replaceFunction")();
 	    			$(this).dialog("close");
 	    		}
-	    	}, {
+	    	},
+	    	{
 	    		text: "Cancel",
 	    		click: function() {
 	    			$(this).dialog("close");
@@ -929,11 +941,11 @@ $(function() {
 	 */
 	function initMapTab() {
 		gmap = new GMaps({
-			div: "#map",
+			div:   "#map",
 			width: "100%",
 			//height: "500px",
-	        lat: 32.794,
-	        lng: -97.042
+	        lat:   32.794,
+	        lng:   -97.042
 		});
 		
 		$("#mapEntityTypes").change(function() {
@@ -961,9 +973,11 @@ $(function() {
 			// If there is a timer already counting down, cancel it.
 			if (mapPollingId !== null) {
 				clearTimeout(mapPollingId);
-			}
-			var timeOutFunction = function() {
 				mapPollingId = null;
+			}
+
+			var timeOutFunction = function() {
+				mapPollingId = null; // Clear the polling if (the timeout value)
 				
 				if (mapEntitiesToDisplay.length === 0) {
 					return;
@@ -992,9 +1006,9 @@ $(function() {
 // We start by creating a marker set of ALL the previously drawn markers.				
 				var clearMarkerSet = {};
 				$.each(mapMarkers, function(propertyName) {
-					clearMarkerSet[propertyName] = true;
+					clearMarkerSet[propertyName] = true; // The value of the property is not used, just wether or not it exists.
 				});
-				
+
 				DSIREST.listEntityInstances(solution.name, entityType).done(function(data){
 					if (data !== null && data.entities !== null) {
 						$.each(data.entities, function(index, value){
@@ -1011,8 +1025,8 @@ $(function() {
 // We now check to see if we have PREVIOUSLY drawn a marker for this entity.  If we have NOT, then we create a
 // new marker.  If we HAVE previously drawn a marker, then we update the position of that marker so that it
 // appears at the new location.
-	
-							if (mapMarkers[markerId] === null) {
+
+							if (mapMarkers[markerId] === null || mapMarkers[markerId] === undefined) {
 								var newMarker = gmap.addMarker({
 									lat: lat,
 									lng: lng,
@@ -1023,7 +1037,7 @@ $(function() {
 								// we have an existing marker, so update its position
 								var existingMarker = mapMarkers[markerId];
 								existingMarker.setPosition(new google.maps.LatLng(lat, lng));
-								delete clearMarkerSet[markerId];
+								delete clearMarkerSet[markerId]; // Remove the marker from the clear marker set.
 							}
 						}); // End of each of the data.entities
 					}; // End of data != null
@@ -1041,7 +1055,7 @@ $(function() {
 					mapPollingId = setTimeout(timeOutFunction, timeout*1000);
 				}
 			}; // End of timeoutFunction
-			
+
 			timeOutFunction();
 			$("#mapPollStop").button("enable");
 			$("#mapPollStart").button("disable");
@@ -1058,11 +1072,11 @@ $(function() {
 
 		// Create the map commands dialog
 	    $("#mapCommandsDialog").dialog({
-	    	autoOpen: false,
-	    	modal: true,
+	    	autoOpen:  false,
+	    	modal:     true,
 	    	resizable: false,
-	    	title: "Map Commands",
-	    	width: "600px",
+	    	title:     "Map Commands",
+	    	width:     "600px",
 	    	buttons: [{
 	    		text: "Run",
 	    		click: function() {
@@ -1102,14 +1116,15 @@ $(function() {
 	    		}
 	    	}]
 	    }); // End of create mapCommandsDialog
-	    
+
 	    $("#mapCommandsOpen").button().click(function() {
 	    	$("#mapCommandsDialog").dialog("open");
 	    });
-	    
+
 	    $("#mapCommandsSave").button().click(function() {
 	    	localStorage.setItem("mapCommands", $("#mapCommandsTextarea").val());
 	    });
+
 	    $("#mapCommandsLoad").button().click(function() {
 	    	$("#mapCommandsTextarea").val(localStorage.getItem("mapCommands"));
 	    });
@@ -1181,11 +1196,8 @@ $(function() {
 		  // of data to add to the output.
 		  ws.onmessage = function(messageEvent) {
 		    // event.data = line
-		    var tr = $("<tr>");
-		    var td = $("<td>");
-		    td.text(messageEvent.data);
-		    tr.append(td);
-		    $("#tailTbody").append(tr);
+		    addLogLine(messageEvent.data, $("#tailTbody"));
+
 		    // If the UI says we are tailing, then tail.
 		    if ($("#tailFollow").is(":checked")) {
 		    	doTail();
@@ -1221,6 +1233,155 @@ $(function() {
 	  $("#tailClear").button().click(function() {
 		  $("#tailTbody").empty(); 
 	  });
+	  
+	  $("#highlightDialog").dialog({
+	    	autoOpen:  false,
+	    	modal:     true,
+	    	resizable: false,
+	    	title:     "Highlights",
+	    	width:     600,
+	    	height:    500,
+	    	buttons: [
+	    	    {
+	    	    	text: "Save",
+	    	    	click: function() {
+	    	    		localStorage.setItem("highlights", $("#highlightTextarea").val());
+	    	    	}
+	    	    },
+	    	    {
+	    	    	text: "Load",
+	    	    	click: function() {
+	    	    		$("#highlightTextarea").val(localStorage.getItem("highlights"));
+	    	    	}
+	    	    },
+	    	    {
+	    		text: "Close",
+	    		click: function() {
+	    			_highlights = JSON.parse($("#highlightTextarea").val());
+	    			drawHighlightsTable(_highlights);
+	    			$(this).dialog("close");
+	    		}
+	    	}]
+	  }); // End of create highlightDialog
+	  
+// Handle the highlights button being clicked.	  
+	  $("#tailHighlights").button().click(function() {
+		  drawHighlightsTable(_highlights);
+		  $("#highlightDialog").dialog("open");
+	  });
+	  
+	  // Load the highlighting
+	  var highlightsText = localStorage.getItem("highlights");
+	  if (highlightsText !== null) {
+		  _highlights = JSON.parse(highlightsText);
+		  $("#highlightTextarea").val(highlightsText);
+	  }
+
+	  var currentRecord = null;
+	  
+// Handle a click on the add highlight button.	  
+	  $("#tailAddHighlight").button().click(function(){
+		  currentRecord = null;
+		  $("#editHighlightDialog").dialog("open");
+	  }); // End of handle an add new highlight
+	  
+	  $("#editHighlightDialog").dialog({
+	    	autoOpen:  false,
+	    	modal:     true,
+	    	resizable: false,
+	    	title:     "Create/Edit Highlight",
+	    	width:     600,
+	    	open: function() {
+	    		console.log("Open called");
+	    		if (currentRecord == null) {
+	    		   $("#editHighlightForeground").val("#FFFFFF");
+	    		   $("#editHighlightBackground").val("#000000");
+	    		   $("#editHighlightRegex").val("");
+	    		} else {
+		    	   $("#editHighlightForeground").val(currentRecord.foreground);
+		    	   $("#editHighlightBackground").val(currentRecord.background);
+		    	   $("#editHighlightRegex").val(currentRecord.regex);
+	    		}
+	    	},
+	    	buttons: [
+	    	    {
+	    	    	text: "Apply",
+	    	    	click: function() {
+// At this point the user has entered data for the new highlighting.
+// The expression can be found in editHighlightRegex while the foreground and background
+// colors can be found in editHighlightForeground and editHighlightBackground.
+	    	    		var expression = $("#editHighlightRegex").val();
+	    	    		var foreground = $("#editHighlightForeground").val();
+	    	    		var background = $("#editHighlightBackground").val();
+
+	    	    		var record = {
+	    	    			"regex": expression,
+	    	    			"foreground": foreground,
+	    	    			"background": background
+	    	    		};
+// hack hack hack
+	    	    		/*
+	    	    		var data = JSON.parse($("#highlightTextarea").val());
+	    	    		data.push(record);
+	    	    		$("#highlightTextarea").val(JSON.stringify(data));
+	    	    		*/
+	    	    		if (currentRecord == null) {
+	    	    			addHighlight(record);
+	    	    		} else {
+	    	    			updateHighlight(currentRecord, record);
+	    	    		}
+	    	    		
+	    	    		drawHighlightsTable(_highlights);
+	    	    		$(this).dialog("close");
+	    	    	}
+	    	    },
+	    	    {
+		    		text: "Cancel",
+		    		click: function() {
+		    			$(this).dialog("close");
+		    		}
+	    	    }
+	    	]
+	  }); // End of create editHighlightDialog 
+
+	  function addHighlight(newRecord) {
+		  _highlights.push(newRecord);
+	  }
+	  
+	  function updateHighlight(originalRecord, newRecord) {
+		  originalRecord.regex = newRecord.regex;
+		  originalRecord.foreground = newRecord.foreground;
+		  originalRecord.background = newRecord.background;
+	  }
+	  
+// Draw the highlights table using the data supplied as a parameter.	  
+	  function drawHighlightsTable(data) {
+		  $("#highlightsTable").empty();
+		  $.each(data, function(index, item) {
+			  let savedItem = item;
+			  var d = $("<div>").css(
+			  {
+			     "padding":          "5px",
+			     "display":          "flex",
+			     "flex-direction":   "row",
+			     "align-items":      "center",
+			     "background-color": item.background,
+			     "color":            item.foreground
+			  });
+			  var d2 = $("<span>").css({"flex-grow": 1}).text(item.regex);
+			  d.append(d2);
+			  d.append($("<button>Edit</button>").css({"margin-left": "5px"}).button().click(function(){
+				  console.log("Editing %s", savedItem.regex);
+				  currentRecord = savedItem;
+				  $("#editHighlightDialog").dialog("open");
+			  }));
+			  d.append($("<button>Delete</button>").button().click(function(){
+				  console.log("Deleting %s", savedItem.regex);
+			  }));
+			  $("#highlightsTable").append(d);
+		  });
+	  }; // End of drawHighlightsTable
+	  
 	} // End of initLogsTab
 	
 	
@@ -1231,12 +1392,13 @@ $(function() {
 	 */
 	function initAboutTab() {
 	    $("#settingsDialog").dialog({
-	    	autoOpen: false,
-	    	modal: true,
+	    	autoOpen:  false,
+	    	modal:     true,
 	    	resizable: false,
-	    	title: "Settings",
-	    	width: "600px",
-	    	buttons: [{
+	    	title:     "Settings",
+	    	width:     600,
+	    	buttons: [
+	    	{
 	    		text: "Save",
 	    		click: function() {
 	    			saveSettings({
@@ -1246,7 +1408,8 @@ $(function() {
 	    			});
 	    			$(this).dialog("close");
 	    		}
-	    	}, {
+	    	},
+	    	{
 	    		text: "Cancel",
 	    		click: function() {
 	    			$(this).dialog("close");
@@ -1295,13 +1458,15 @@ $(function() {
 	    	modal: true,
 	    	resizable: false,
 	    	title: "Save event",
-	    	buttons: [{
+	    	buttons: [
+	    	{
 	    		text: "Save",
 	    		click: function() {
 	    			saveEvent($("#saveEventName").val(), $("#eventData").val().trim());
 	    			$(this).dialog("close");
 	    		}
-	    	}, {
+	    	},
+	    	{
 	    		text: "Cancel",
 	    		click: function() {
 	    			$(this).dialog("close");
@@ -1312,8 +1477,8 @@ $(function() {
 		$('#savedEventsTable').DataTable({
 			autoWidth: false,
 			searching: false,
-			paging: true,
-			info: false,
+			paging:    true,
+			info:      false,
 			"columns": [
 			   { data: "name",    title: "Name" },
 			   { data: "lastUpdated", title: "Date", render: function(data, type, row, meta) {
@@ -1324,19 +1489,21 @@ $(function() {
 		});
 		
 	    $("#loadEventDialog").dialog({
-	    	autoOpen: false,
-	    	modal: true,
+	    	autoOpen:  false,
+	    	modal:     true,
 	    	resizable: false,
-	    	width: 600,
-	    	title: "Load event",
-	    	buttons: [{
+	    	width:     600,
+	    	title:     "Load event",
+	    	buttons: [
+	    	{
 	    		text: "Use",
 	    		click: function() {
 	    			var savedEvent = $("#savedEventsTable").DataTable().row({selected: true}).data();
 	    			$("#eventData").val(savedEvent.data);
 	    			$(this).dialog("close");
 	    		}
-	    	},{
+	    	},
+	    	{
 	    		text: "Delete",
 	    		click: function() {
 	    			// Determine which item in the savedEventsTable was selected
@@ -1346,7 +1513,8 @@ $(function() {
 	    				updateSavedEventsTable();
 	    			}
 	    		}
-	    	}, {
+	    	},
+	    	{
 	    		text: "Cancel",
 	    		click: function() {
 	    			$(this).dialog("close");
@@ -1355,12 +1523,13 @@ $(function() {
 	    });
 	    
 	    $("#eventHistoryDialog").dialog({
-	    	"width": 600,
-	    	"autoOpen": false,
-	    	"modal": true,
+	    	"width":     600,
+	    	"autoOpen":  false,
+	    	"modal":     true,
 	    	"resizable": false,
-	    	"title": "Historic events",
-	    	"buttons": [{
+	    	"title":     "Historic events",
+	    	"buttons": [
+	    	{
 	    		"text": "Use",
 	    		"click": function() {
 	    			var selectedRows = $("#eventHistoryTable").DataTable().rows({selected: true});
@@ -1397,8 +1566,8 @@ $(function() {
 		let eventHistoryTable = $('#eventHistoryTable').DataTable({
 			"autoWidth": false,
 			"searching": false,
-			"paging": true,
-			"info": false,
+			"paging":    true,
+			"info":      false,
 			"columns": [
 			   { data: "name",    title: "Name" },
 			   { data: "timestamp", title: "Date", render: function(data, type, row, meta) {
@@ -1496,7 +1665,7 @@ $(function() {
 	} // End of loadBOMModles
 
 	/**
-	 * Save BOM models to the localStorage.
+	 * Save BOM models to the localStorage. 
 	 * @private
 	 * @memberOf main
 	 * @description
@@ -1514,7 +1683,7 @@ $(function() {
 
 	/**
 	 * Get the BOM model for a given solution.
-	 * @function 
+	 * @function
 	 * @private
 	 * @memberOf main
 	 * @description
@@ -1574,6 +1743,61 @@ $(function() {
 	 */
 	function saveSettings(settings) {
 		localStorage.setObject("settings", settings);
+	}
+	
+	
+	/**
+	 * @module main
+	 * @function
+	 * @private 
+	 * @param line
+	 * @param table 
+	 */
+	function addLogLine(line, table) {
+		var tr = $("<tr>");
+	    var td = $("<td>");
+	    var processWAS = true;
+	    var text = line;
+	    if (processWAS) {
+	    	//var array = line.match(/\[(.*)\]\s*([.*]{8})\s(\S*)\s(\w)\s(.*):\s(.*)/);
+	    	var array = line.match(/\[(.*)\]\s(.{8})\s(\S*)\s*(.)\s(.*)/);
+	    	//
+	    	// 0 - Whole line
+	    	// 1 - Date
+	    	// 2 - Thread
+	    	// 3 - Module
+	    	// 4 - Type
+	    	// 5 - Message
+	    	//debugger;
+	    	if (array != null) {
+	    		text = array[1] + "| " + array[5];
+	    	}
+	    }
+	    td.text(text);
+	    hilightLine(line, td);
+	    tr.append(td);
+	    table.append(tr);
+	}
+	
+	// Hilights is an array of objects where each object contains
+	// {
+	//   regex: "regex",
+	//   background: "color",
+	//   foreground: "color",
+	//   bold: <boolean>
+	// }
+	function hilightLine(line, element) {
+		$.each(_highlights, function(index, highlight){
+			if (new RegExp(highlight.regex).test(line)) {
+				if (highlight.hasOwnProperty("background")) {
+					element.css({"background-color": highlight.background});
+				}
+				if (highlight.hasOwnProperty("foreground")) {
+					element.css({"color": highlight.foreground});
+				}
+				return false;
+			}
+		});
 	}
 	
 	refreshSolutions();
