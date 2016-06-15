@@ -14,6 +14,12 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 
+<!-- Alpaca -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.js"></script>
+<script src="lib/alpaca/jqueryui/alpaca.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/alpaca/jqueryui/alpaca.css" />
+
 <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/dataTables.jqueryui.min.js"></script>
 <script type="text/javascript" src="//cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
@@ -148,6 +154,8 @@ div.dataTables_length {
 				</div>
 				<div style="margin-top: 5px;">
 					<span id="eventMessage"></span>
+				</div>
+				<div id="eventForm">
 				</div>
 			</div>
 		</div>
@@ -344,11 +352,11 @@ highlightDialog
 -->
 	<div id="highlightDialog">
 		<div style="display: flex; flex-direction: column; height:100%">
-			<textarea id="highlightTextarea" style="width: 100%; max-width: 100%; font-family: 'courier new'; flex-grow: 1;"></textarea>
-			<div id="highlightsTable"></div>
-			<div>
+			<div style="margin-bottom: 5px;">
 				<button id="tailAddHighlight">Add</button>
 			</div>
+			<div id="highlightsTable" style="flex-grow: 1; border: 1px solid;"></div>
+
 			<fieldset style="margin-top: 15px;">
 			<legend>WAS Format:</legend>
 			<div>

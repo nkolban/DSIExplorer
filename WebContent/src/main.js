@@ -43,6 +43,14 @@ $(function() {
 	} else {
 		DSIREST.setBaseURL(window.location.protocol + "://" + window.location.host);
 	}
+	
+	// Polyfills
+	if (!String.prototype.startsWith) {
+	    String.prototype.startsWith = function(searchString, position){
+	      position = position || 0;
+	      return this.substr(position, searchString.length) === searchString;
+	  };
+	}
 
 	/**
 	 * @memberOf main
@@ -88,6 +96,8 @@ $(function() {
 	var bomModels = {};
 	loadBOMModels();
 	
+	// Add extra function to the Storage object to handle get/set of objects.
+	// This manifests itself in extra functions on "localStorage".
 	Storage.prototype.setObject = function(key, value) {
 	    this.setItem(key, JSON.stringify(value));
 	};
@@ -557,7 +567,7 @@ $(function() {
 			$(".dsi_enableOnSolution").button("option", "disabled", true);
 			$("#tabs").tabs("option", "disabled", [entitiesTabIndex, eventsTabIndex]);
 			$("#selectedSolutionLabel").text("None");
-			$("#bomLoadedLabel").text("Nonde");
+			$("#bomLoadedLabel").text("None");
 		});
 		
 // Handle the user clicking the stop button to stop a solution.
@@ -881,14 +891,21 @@ $(function() {
 	    $.contextMenu({
 	    	selector: "#eventData",
 	    	autoHide: true, // Should the menu disappear when the mouse moves out of the trigger area.
-	    	build: function(triggerElement, e) {
+	    	build:    function(triggerElement, e) {
 	    		var bomModel = getSolutionModel();
 	    		if (bomModel === null) {
 	    			return false;
 	    		}
 
 	    		var items = {};
+
+// Define a callback function that will be invoked when the user selects an entry from the menu.
 	    		var itemCallback = function(itemKey, opt) {
+	    			//
+	    			// HACK
+	    			//
+	    			buildFormForEvent($("#eventForm"), itemKey);
+	    			//
 	    			var selectedEvent = getEventByName(itemKey);
 	    			var replaceFunction = function() {
 	        			if (selectedEvent === null) {
@@ -907,6 +924,7 @@ $(function() {
 	        		}
 	    		}; // End of itemCallback definition
 	    		
+// Add a menu entry for each of the event types defined in the BOM model.
 	    		$.each(bomModel.events, function(index, currentEventModel) {
 	    			items[currentEventModel["$Name"]] = {
 	    				name: currentEventModel["$Name"],
@@ -917,7 +935,7 @@ $(function() {
 	    		return {
 	    			items: items
 	    		}
-	    	}
+	    	} // End of build function
 	    }); // End of context menu for event data text area.
 	} // End of initEventsTab
 	
@@ -1245,20 +1263,20 @@ $(function() {
 	    	    {
 	    	    	text: "Save",
 	    	    	click: function() {
-	    	    		localStorage.setItem("highlights", $("#highlightTextarea").val());
+	    	    		localStorage.setObject("highlights", _highlights);
+		    			drawHighlightsTable(_highlights);
 	    	    	}
 	    	    },
 	    	    {
 	    	    	text: "Load",
 	    	    	click: function() {
-	    	    		$("#highlightTextarea").val(localStorage.getItem("highlights"));
+	    	    		_highlights = localStorage.getObject("highlights");
+		    			drawHighlightsTable(_highlights);
 	    	    	}
 	    	    },
 	    	    {
 	    		text: "Close",
 	    		click: function() {
-	    			_highlights = JSON.parse($("#highlightTextarea").val());
-	    			drawHighlightsTable(_highlights);
 	    			$(this).dialog("close");
 	    		}
 	    	}]
@@ -1271,10 +1289,9 @@ $(function() {
 	  });
 	  
 	  // Load the highlighting
-	  var highlightsText = localStorage.getItem("highlights");
-	  if (highlightsText !== null) {
-		  _highlights = JSON.parse(highlightsText);
-		  $("#highlightTextarea").val(highlightsText);
+	  _highlights = localStorage.getObject("highlights");
+	  if (_highlights == null) {
+		  _highlights = [];
 	  }
 
 	  var currentRecord = null;
@@ -1319,12 +1336,7 @@ $(function() {
 	    	    			"foreground": foreground,
 	    	    			"background": background
 	    	    		};
-// hack hack hack
-	    	    		/*
-	    	    		var data = JSON.parse($("#highlightTextarea").val());
-	    	    		data.push(record);
-	    	    		$("#highlightTextarea").val(JSON.stringify(data));
-	    	    		*/
+
 	    	    		if (currentRecord == null) {
 	    	    			addHighlight(record);
 	    	    		} else {
@@ -1354,6 +1366,15 @@ $(function() {
 		  originalRecord.background = newRecord.background;
 	  }
 	  
+	  function deleteHighlight(originalRecord) {
+		$.each(_highlights, function(index, item){
+			if (item == originalRecord) {
+				_highlights.splice(index, 1);
+				return false;
+			}
+		});  
+	  }
+	  
 // Draw the highlights table using the data supplied as a parameter.	  
 	  function drawHighlightsTable(data) {
 		  $("#highlightsTable").empty();
@@ -1377,6 +1398,8 @@ $(function() {
 			  }));
 			  d.append($("<button>Delete</button>").button().click(function(){
 				  console.log("Deleting %s", savedItem.regex);
+				  deleteHighlight(savedItem);
+				  drawHighlightsTable(data);
 			  }));
 			  $("#highlightsTable").append(d);
 		  });
@@ -1798,6 +1821,42 @@ $(function() {
 				return false;
 			}
 		});
+	}
+	
+	/**
+	 * @module main
+	 * @function
+	 * @private 
+	 * @param formRoot A jquery object reference to the root of the form.
+	 * @param eventType The name of the event type for which we wish to build the form.
+	 * @description
+	 * Build an Alpaca form for the specified event type.
+	 */
+	function buildFormForEvent(formRoot, eventType) {
+		var eventModel = getEventByName(eventType);
+		//debugger;
+		var alpacaOptions = {
+			"schema": {
+				description: "Entry of an event",
+				type: "object",
+				properties: {}
+			},
+			"view": "jqueryui-create"
+		};
+		$.each(eventModel, function(name, value) {
+			// The name is the name of an event field.
+			// The value is the value of the event field.
+			var entry = {
+				title: name
+			};
+			if (value == "java.time.ZonedDateTime") {
+				entry.type = "integer";
+			} else {
+				entry.type = "string";
+			}
+			alpacaOptions.schema.properties[name] = entry;
+		});
+		formRoot.alpaca(alpacaOptions);
 	}
 	
 	refreshSolutions();
