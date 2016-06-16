@@ -117,7 +117,7 @@ $(function() {
 		}
 	});
 	
-	document.oncontextmenu = function() {return false;};
+	//document.oncontextmenu = function() {return false;};
 	
 	// Create the tabs on the page.
 	$("#tabs").tabs({
@@ -211,6 +211,7 @@ $(function() {
 
 		$("#entitiesTree").jstree(true).settings.core.data = treeNodes;
 		$("#entitiesTree").jstree(true).refresh();
+		//$("#entitiesTree").jstree(true).redraw(true);
 	} // End of entitiesToTree
 
 
@@ -249,10 +250,16 @@ $(function() {
 	 * @function
 	 * @private
 	 * @memberOf main
+	 * @description
+	 * Returns an array of solution objects retrieved from the DSI server.  Each
+	 * solution object contains a name and a version. 
 	 */
 	function refreshSolutions() {
 		DSIJMX.getSolutions(function(solutions) {
-			console.log("Solns=%O", solutions);
+			// Walk through each of the solutions and see it if has a loaded BOM.
+			$.each(solutions, function(index, item) {
+				item.bomLoaded = (getSolutionModel(item.name) != null);
+			});
 			$('#solutions').DataTable().clear().rows.add(solutions).draw();
 		});
 	} // End of refresh
@@ -331,9 +338,7 @@ $(function() {
 		return foundModel;
 	} // End of getModelFromEntityType
 
-	
-
-	
+		
 	/**
 	 * @function
 	 * @private
@@ -356,6 +361,54 @@ $(function() {
 		});
 		return ret;
 	} // End of getEventByName
+
+	
+	/**
+	 * @function
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Examine the BOM model for the current solution looking for the template of the concept
+	 * whos type is supplied as a parameter.  Null is returned if there is no BOM model or
+	 * the concept type can not be found.
+	 */	
+	function getConceptByName(conceptType) {
+		var bomModel = getSolutionModel();
+		if (bomModel === null) {
+			return null;
+		}
+		var ret = null;
+		$.each(bomModel.concepts, function(index, value) {
+			if (value["$Name"] == conceptType) {
+				ret = value;
+			}
+		});
+		return ret;
+	} // End of getConceptByName
+
+	
+	/**
+	 * @function
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Examine the BOM model for the current solution looking for the template of the entity
+	 * whos type is supplied as a parameter.  Null is returned if there is no BOM model or
+	 * the entity type can not be found.
+	 */	
+	function getEntityByName(entityType) {
+		var bomModel = getSolutionModel();
+		if (bomModel === null) {
+			return null;
+		}
+		var ret = null;
+		$.each(bomModel.entities, function(index, value) {
+			if (value["$Name"] == entityType) {
+				ret = value;
+			}
+		});
+		return ret;
+	} // End of getConceptByName
 
 
 	/**
@@ -527,11 +580,12 @@ $(function() {
 			//paging: false,
 			info: false,
 			"columns": [
-			   { data: "name",    title: "Solution Name" },
-			   { data: "version", title: "Solution Version" },
+			   { data: "name",      title: "Solution Name" },
+			   { data: "version",   title: "Solution Version" },
+			   { data: "bomLoaded", title: "BOM Loaded" },
 			   {
-				   data: "name",
-				   title: "BOM",
+				   data:  "name",
+				   title: "Actions",
 				   render: function(data, type, row, meta) {
 					   return "";
 				   },
@@ -545,7 +599,8 @@ $(function() {
 					   }).data("row", row);
 					   $(td).append(b);
 				   }
-			   }
+			   },
+
 			],
 			select: 'single'
 		}); // End of table definition for solution table.
@@ -617,19 +672,22 @@ $(function() {
 			refreshSolutions();
 		});
 		
-// Create the fileupload control		
+// Create the fileupload control.  The file upload allows a user to select a BOM file on
+// the local file system and upload it to the DSI server where a REST catcher application
+// parses the BOM file and returns a JSON object that describes the logical content
+// of the BOM.		
 	    $('#bomFileUpload').fileupload({
-	        dataType: 'json',
-	        "url": "/DSI_REST_Utils/xxx/myPath",
-	        done: function (e, data) {
+	        "dataType": "json",
+	        "url":      "/DSI_REST_Utils/xxx/myPath",
+	        "done":     function (e, data) {
 	        	var selectedSolution = getSelectedSolution();
 	        	if (selectedSolution === null) {
 	        		return;
 	        	}
 	        	setSolutionModel(selectedSolution.name, data.result);
 	        	$("#bomLoadedLabel").text("Yes");
-	        }
-	    });
+	        } // End of done
+	    }); // End of fileupload
 	    
 	    // MUST BE LAST THING DONE IN INITIALIZATION
 		$(".dsi_enableOnSolution").button("option", "disabled", true);
@@ -687,8 +745,7 @@ $(function() {
 						return false;
 					}
 				});
-				
-				
+								
 				//$("#entitiesTable").DataTable("option", "columns", columns);
 				$("#entitiesTable").remove();
 				$("#entitiesTable_wrapper").remove();
@@ -855,14 +912,14 @@ $(function() {
 			$("#eventMessage").text("Event sent at " + new Date().toLocaleString());
 		});
 		
-		// Disable the Send button if there is no input
+// Disable the Send button if there is no input
 		$("#eventData").on("input", function() {
 			var enable = $("#eventData").val().trim().length>0?"enable":"disable";
 			$("#sendEvent").button(enable);
 			$("#eventSaveButton").button(enable);
 		});
 		
-		// Create a confirm replace dialog.
+// Create a confirm replace dialog.
 	    $("#confirmReplace").dialog({
 	    	autoOpen:  false,
 	    	modal:     true,
@@ -885,58 +942,54 @@ $(function() {
 	    	}]
 	    }); // End of confirmReplaceDialog
 	    
-		/**
-	     * Add a context menu to the event data text area.
-	     */
-	    $.contextMenu({
-	    	selector: "#eventData",
-	    	autoHide: true, // Should the menu disappear when the mouse moves out of the trigger area.
-	    	build:    function(triggerElement, e) {
+
+// Add a context menu to the event data text area.
+	    $("#eventData").contextmenu({
+	    	select: function(event, ui) {
+	    		// ui.cmd is the command executed ...
+    			//
+	    		var eventType = ui.cmd;
+    			// HACK
+    			//
+    			buildFormForEvent($("#eventForm"), eventType);
+    			//
+    			var selectedEvent = getEventByName(eventType);
+    			var replaceFunction = function() {
+        			if (selectedEvent === null) {
+        				return;
+        			}
+        			$("#eventData").val(JSON.stringify(selectedEvent, null, 2));
+    			};
+        		var eventJSON = $("#eventData").val().trim();
+        		if (eventJSON.length > 0) {
+        			// There is ALREADY text in the data ... validate that we are ok to overwrite with an event
+        			// template.
+            		$("#eventData").data("replaceFunction", replaceFunction);
+        			$("#confirmReplace").dialog("open");
+        		} else {
+        			replaceFunction();
+        		}
+	    	}, // End select
+	    	
+// Populate the context menu items with the list of event types in the
+// currently selected solution.
+	    	beforeOpen: function(event, ui) {
 	    		var bomModel = getSolutionModel();
 	    		if (bomModel === null) {
 	    			return false;
-	    		}
-
-	    		var items = {};
-
-// Define a callback function that will be invoked when the user selects an entry from the menu.
-	    		var itemCallback = function(itemKey, opt) {
-	    			//
-	    			// HACK
-	    			//
-	    			buildFormForEvent($("#eventForm"), itemKey);
-	    			//
-	    			var selectedEvent = getEventByName(itemKey);
-	    			var replaceFunction = function() {
-	        			if (selectedEvent === null) {
-	        				return;
-	        			}
-	        			$("#eventData").val(JSON.stringify(selectedEvent, null, 2));
-	    			};
-	        		var eventJSON = $("#eventData").val().trim();
-	        		if (eventJSON.length > 0) {
-	        			// There is ALREADY text in the data ... validate that we are ok to overwrite with an event
-	        			// template.
-	            		$("#eventData").data("replaceFunction", replaceFunction);
-	        			$("#confirmReplace").dialog("open");
-	        		} else {
-	        			replaceFunction();
-	        		}
-	    		}; // End of itemCallback definition
+	    		}	    		
 	    		
 // Add a menu entry for each of the event types defined in the BOM model.
+	    		var newMenu = [];
 	    		$.each(bomModel.events, function(index, currentEventModel) {
-	    			items[currentEventModel["$Name"]] = {
-	    				name: currentEventModel["$Name"],
-	    				callback: itemCallback
-	    			}
+	    			newMenu.push({
+	    				"title": currentEventModel["$Name"],
+	    				"cmd":   currentEventModel["$Name"]
+	    			});
 	    		});
-	    		
-	    		return {
-	    			items: items
-	    		}
-	    	} // End of build function
-	    }); // End of context menu for event data text area.
+	    		$("#eventData").contextmenu("replaceMenu", newMenu);
+	    	} // End beforeOpen
+	    }); // End definition of context menu
 	} // End of initEventsTab
 	
 	
@@ -1666,9 +1719,10 @@ $(function() {
 		}
 		return "Unknown type";
 	} // End of propertyToString
+
 	
 	/**
-	 * Load BOM models from the localStorage.
+	 * Load BOM models from the browser localStorage.
 	 * @private
 	 * @memberOf main
 	 * @description
@@ -1678,6 +1732,7 @@ $(function() {
 	 * <li><b>bomModel</b> - The bomModel object</li>
 	 * <li><b>lastUpdated</b> - The time when the object was last updated</li>
 	 * </ul>
+	 * The result is saved in the global variable called "bomModels".
 	 */	
 	function loadBOMModels() {
 		var textData = localStorage.getItem("bomModels");
@@ -1687,8 +1742,9 @@ $(function() {
 		return;
 	} // End of loadBOMModles
 
+	
 	/**
-	 * Save BOM models to the localStorage. 
+	 * Save BOM models to the browser localStorage. 
 	 * @private
 	 * @memberOf main
 	 * @description
@@ -1713,7 +1769,7 @@ $(function() {
 	 * Get the BOM model for the solution or the currently selected solution.
 	 */
 	function getSolutionModel(solutionName) {
-		if (solutionName === null || solution === undefined) {
+		if (solutionName === null || solutionName === undefined) {
 			var solution = getSelectedSolution();
 			if (solution === null || solution === undefined) {
 				return null;
@@ -1740,6 +1796,7 @@ $(function() {
 		bomModels[solutionName] = {bomModel: model, lastUpdated: new Date()};
 		saveBOMModels();
 	} // End of setSolutionModel
+
 	
 	/**
 	 * @module main
@@ -1757,6 +1814,7 @@ $(function() {
 		}
 		return settings;
 	}
+
 	
 	/**
 	 * @module main
@@ -1822,6 +1880,7 @@ $(function() {
 			}
 		});
 	}
+
 	
 	/**
 	 * @module main
@@ -1833,31 +1892,58 @@ $(function() {
 	 * Build an Alpaca form for the specified event type.
 	 */
 	function buildFormForEvent(formRoot, eventType) {
+// Get the model for the given eventType.		
 		var eventModel = getEventByName(eventType);
-		//debugger;
+		if (eventModel === null) {
+			console.warn("We tried to find an event of type " + eventType +" but could not.")
+			return;
+		}
+
+// Build the alpaca options		
 		var alpacaOptions = {
 			"schema": {
-				description: "Entry of an event",
-				type: "object",
-				properties: {}
+				"description": "Entry of an event",
+				"type":        "object",
+				"properties":  {}
 			},
 			"view": "jqueryui-create"
 		};
-		$.each(eventModel, function(name, value) {
-			// The name is the name of an event field.
-			// The value is the value of the event field.
-			var entry = {
-				title: name
-			};
-			if (value == "java.time.ZonedDateTime") {
-				entry.type = "integer";
-			} else {
-				entry.type = "string";
-			}
-			alpacaOptions.schema.properties[name] = entry;
-		});
+		function processSubModel(parent, model) {
+			parent.properties = {};
+			$.each(model, function(fieldName, fieldType) {
+				// The name is the name of an event field.
+				// The value is the value of the event field.
+				var entry = {
+					title: fieldName
+				};
+				//debugger;
+				if (fieldName.startsWith("$")) {
+					entry.type = "string";
+				} else if (fieldType == "java.time.ZonedDateTime") {
+					entry.type = "integer";
+				} else if (fieldType == "double") {
+					entry.type = "string";
+				} else if (fieldType == "java.lang.String") {
+					entry.type = "string";
+				} else {
+// It isn't a simple type, let's see if we have an entity or concept that matches it
+					var possibleModel = getConceptByName(fieldType);
+					if (possibleModel === null) {
+						possibleModel = getEntityByName(fieldType);
+					}
+					if (possibleModel !== null) {
+						processSubModel(entry, possibleModel);
+						entry.type = "object";
+					} else {
+						entry.type = "string";
+					}
+				}
+				parent.properties[fieldName] = entry;
+			});
+		}; // End of processSubModel
+		processSubModel(alpacaOptions.schema, eventModel);
 		formRoot.alpaca(alpacaOptions);
-	}
+	} // End of buildFormForEvent
 	
 	refreshSolutions();
 }); // End of on load

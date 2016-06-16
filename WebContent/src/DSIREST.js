@@ -57,6 +57,9 @@ var DSIREST = (function(){
 	 * </ul>
 	 */
 	function _OBJECT2XML(event) {
+//
+// NOTE: Consider re-implementing this with XMLSerializer
+//
 		var eventName = event["$Name"].split(".")[1];
 		var eventXML = "<?xml version='1.0' encoding='UTF-8'?>" +
 		"<m:" + eventName + " xmlns:m='" + event["$Namespace"] + "' " +

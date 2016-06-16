@@ -11,7 +11,7 @@ follows:
 
 2. Copy the `DSI_REST_Utils.war` to the app folder which is commonly found at
 
-`<LibertyRoot>/usr/server/<serverName>/apps`
+`<LibertyRoot>/usr/servers/<serverName>/apps`
 
 We must also explicitly define an application entry in `server.xml` for `DSI_REST_Utils.war` which looks like:
 
