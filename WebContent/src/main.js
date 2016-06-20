@@ -107,7 +107,7 @@ $(function() {
 	    return value && JSON.parse(value);
 	};
 	
-	// Initialize the body of the page for the jQuery UI Layout control
+	// Initialize the body of the page for the jQuery UI Layout control 
 	$('body').layout({
 		south__resizable: false,
 		south__closable: false,
@@ -119,7 +119,7 @@ $(function() {
 	
 	//document.oncontextmenu = function() {return false;};
 	
-	// Create the tabs on the page.
+	// Create the tabs on the page. 
 	$("#tabs").tabs({
 		"heightStyle": "fill",
 		disabled: [ entitiesTabIndex, eventsTabIndex],
@@ -137,7 +137,7 @@ $(function() {
 	});
 	*/
 
-    // Initialize all the content of each of the tabs.  We can potentially
+    // Initialize all the content of each of the tabs.  We can potentially 
 	// improve our performance (if it becomes an issue) by lazy initialization
 	// such that the first time a tab is shown, we initialize it.
     initGeneral();
@@ -149,6 +149,7 @@ $(function() {
     initMapTab();
     initLogsTab();
     initAboutTab();
+    initJobsTab();
 
 	/**
 	 * @private
@@ -255,7 +256,7 @@ $(function() {
 	 * solution object contains a name and a version. 
 	 */
 	function refreshSolutions() {
-		DSIJMX.getSolutions(function(solutions) {
+		DSIJMX.getSolutions().then(function(solutions) {
 			// Walk through each of the solutions and see it if has a loaded BOM.
 			$.each(solutions, function(index, item) {
 				item.bomLoaded = (getSolutionModel(item.name) != null);
@@ -357,10 +358,31 @@ $(function() {
 		$.each(bomModel.events, function(index, value) {
 			if (value["$Name"] == eventType) {
 				ret = value;
+				return false;
 			}
 		});
 		return ret;
 	} // End of getEventByName
+	
+	/**
+	 * @function
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Examine the BOM model and return a list of the names of the different types of events
+	 * available to us.
+	 */
+	function getEventTypeNames() {
+		var bomModel = getSolutionModel();
+		if (bomModel === null) {
+			return [];
+		}
+		var ret = [];
+		$.each(bomModel.events, function(index, value) {
+			ret.push(value["$Name"]);
+		});
+		return ret;
+	} // End of getEventTypeNames
 
 	
 	/**
@@ -536,7 +558,7 @@ $(function() {
 	 * @private
 	 * @memberOf main
 	 * @description
-	 * Initialize the global properties tab.
+	 * Initialize the global properties tab. 
 	 */
 	function initGlobalPropertiesTab() {
 		$('#globalProperties').DataTable({
@@ -551,7 +573,7 @@ $(function() {
 			   { data: "value", title: "Value" }
 			]
 		});
-		DSIJMX.listGlobalProperties(function(data) {
+		DSIJMX.listGlobalProperties().then(function(data) {
 			var values = [];
 			$.each(data, function(index, propertyName) {
 				values.push({ name: propertyName, value: "N/A"});
@@ -605,7 +627,7 @@ $(function() {
 			select: 'single'
 		}); // End of table definition for solution table.
 		
-		// Handle a selection change on the solutions table.  When a new solution is selected, we need to get the new list
+		// Handle a selection change on the solutions table.  When a new solution is selected, we need to get the new list 
 		// of entity types that are available.  In addition, we need to enable the buttons that should only be active when
 		// a solution has been selected.
 		table.on('select', function(e, dt, type, indexes) {
@@ -616,6 +638,7 @@ $(function() {
 			resetMapTab();
 			var bomModel = getSolutionModel(getSelectedSolution().name);
 			$("#bomLoadedLabel").text(bomModel!==null?"Yes":"No");
+			refreshEventsTab();
 		}); // End of solution selection changed.
 		
 		table.on('deselect', function(e, dt, type, indexes) {
@@ -632,7 +655,7 @@ $(function() {
 			console.log("Stop! - selected: " + table.rows({selected: true}).count());
 			table.rows({selected: true}).every(function() {
 				console.log("Stopping: %O", this.data());
-				DSIJMX.stopSolution(this.data().name, function() {
+				DSIJMX.stopSolution(this.data().name).then(function() {
 					refreshSolutions();
 				});
 			});
@@ -646,7 +669,7 @@ $(function() {
 			console.log("Activate! - selected: " + table.rows({selected: true}).count());
 			table.rows({selected: true}).every(function() {
 				console.log("Activating: %O", this.data());
-				DSIJMX.activateSolution(this.data().name+"-0.0", function() {
+				DSIJMX.activateSolution(this.data().name+"-0.0").then(function() {
 					refreshSolutions();
 				});
 			});
@@ -659,7 +682,7 @@ $(function() {
 			console.log("Undeploy! - selected: " + table.rows({selected: true}).count());
 			table.rows({selected: true}).every(function() {
 				console.log("Undeploying: %O", this.data());
-				DSIJMX.undeploySolution(this.data().name + "-0.0", function() {
+				DSIJMX.undeploySolution(this.data().name + "-0.0").then(function() {
 					refreshSolutions();
 				});
 			});
@@ -971,7 +994,7 @@ $(function() {
         		}
 	    	}, // End select
 	    	
-// Populate the context menu items with the list of event types in the
+// Populate the context menu items with the list of event types in the 
 // currently selected solution.
 	    	beforeOpen: function(event, ui) {
 	    		var bomModel = getSolutionModel();
@@ -979,7 +1002,7 @@ $(function() {
 	    			return false;
 	    		}	    		
 	    		
-// Add a menu entry for each of the event types defined in the BOM model.
+// Add a menu entry for each of the event types defined in the BOM model.  
 	    		var newMenu = [];
 	    		$.each(bomModel.events, function(index, currentEventModel) {
 	    			newMenu.push({
@@ -990,7 +1013,34 @@ $(function() {
 	    		$("#eventData").contextmenu("replaceMenu", newMenu);
 	    	} // End beforeOpen
 	    }); // End definition of context menu
+	    
+	    $("#eventEntryTabs").tabs();
+	    $("#eventEntryFormTab_selectEvent").selectmenu({
+	    	select: function(event, ui) {
+	    		var eventType = $("#eventEntryFormTab_selectEvent option:selected").text();
+	    		console.log("Item changed to " + eventType);
+	    		buildFormForEvent($("#eventForm"), eventType);
+	    	}
+	    });
 	} // End of initEventsTab
+	
+	/**
+	 * @function
+	 * @private
+	 * @memberOf main
+	 * @description
+	 * Refresh the Events tab.
+	 */
+	// The events tab has been switched to, let us refresh it as needed. 
+	function refreshEventsTab() {
+		var eventTypeNames = getEventTypeNames();
+		$("#eventEntryFormTab_selectEvent").empty();
+		$.each(eventTypeNames, function(index, value) {
+			var option = $("<option>").text(value);
+			$("#eventEntryFormTab_selectEvent").append(option);
+		});
+		$("eventEntryFormTab_selectEvent").selectmenu("refresh");
+	} // End of refreshEventsTab
 	
 	
 	// The list of entities to display.  Each entry is an object of the form:
@@ -1460,6 +1510,39 @@ $(function() {
 	  
 	} // End of initLogsTab
 	
+	/**
+	 * @private
+	 * @memberOf main
+	 * @function
+	 */
+	function initJobsTab() {
+		$("#jobsRefreshButton").button().click(function() {
+			DSIJMX.job_getJobRunInfos().then(function(data){
+				$('#runIdsTable').DataTable().clear().rows.add(data[0].value.value).draw();
+			});
+		});
+		$('#runIdsTable').DataTable({
+			"autoWidth": false,
+			"searching": false,
+			"scrollY":   "400px",
+			"paging":    false,
+			"info":      false,
+			"select":   'single',
+			"order":    [[5, 'asc']],
+			"columns": [
+			   { data: "id.id",  title: "ID" },
+			   { data: "id.jobName", title: "Job Name" },
+			   { data: "id.solutionName", title: "Solution Name" },
+			   { data: "status", title: "Status"},
+			   { data: "jobResultInfo.resultAsString", title: "Result"},
+			   { data: "endTime", title: "End",
+				   "render": function(data, type, row, meta) {
+					   return new Date(Number(data)).toLocaleString();
+				   }
+			   }
+			]
+		});
+	}
 	
 	/**
 	 * @private
@@ -1889,38 +1972,34 @@ $(function() {
 	 * @param formRoot A jquery object reference to the root of the form.
 	 * @param eventType The name of the event type for which we wish to build the form.
 	 * @description
-	 * Build an Alpaca form for the specified event type.
+	 * Build a form for the specified event type.
 	 */
 	function buildFormForEvent(formRoot, eventType) {
-// Get the model for the given eventType.		
+// Get the model for the given eventType.		 
 		var eventModel = getEventByName(eventType);
 		if (eventModel === null) {
 			console.warn("We tried to find an event of type " + eventType +" but could not.")
 			return;
 		}
 
-// Build the alpaca options		
-		var alpacaOptions = {
-			"schema": {
-				"description": "Entry of an event",
-				"type":        "object",
-				"properties":  {}
-			},
-			"view": "jqueryui-create"
-		};
-		function processSubModel(parent, model) {
-			parent.properties = {};
+		function buildSchema(model) {
+			var schema = [];
 			$.each(model, function(fieldName, fieldType) {
 				// The name is the name of an event field.
 				// The value is the value of the event field.
+				if (fieldName.startsWith("$")) {
+					return true;
+				}
+				
 				var entry = {
-					title: fieldName
+					label: fieldName,
+					name: fieldName
 				};
 				//debugger;
 				if (fieldName.startsWith("$")) {
 					entry.type = "string";
 				} else if (fieldType == "java.time.ZonedDateTime") {
-					entry.type = "integer";
+					entry.type = "datetime";
 				} else if (fieldType == "double") {
 					entry.type = "string";
 				} else if (fieldType == "java.lang.String") {
@@ -1932,17 +2011,19 @@ $(function() {
 						possibleModel = getEntityByName(fieldType);
 					}
 					if (possibleModel !== null) {
-						processSubModel(entry, possibleModel);
+						entry.children = buildSchema(possibleModel);
 						entry.type = "object";
 					} else {
 						entry.type = "string";
 					}
 				}
-				parent.properties[fieldName] = entry;
+				schema.push(entry);
 			});
+			return schema;
 		}; // End of processSubModel
-		processSubModel(alpacaOptions.schema, eventModel);
-		formRoot.alpaca(alpacaOptions);
+		var schema = buildSchema( eventModel);
+		$(formRoot).empty();
+		FormBuilder.newForm(formRoot, schema);
 	} // End of buildFormForEvent
 	
 	refreshSolutions();

@@ -5,24 +5,28 @@ var DSIJMX = (function() {
 	/**
 	 * @private
 	 */
-	function doJMX(path, callback, method, payload) {
+	// Return a Promise that is fulfilled when the JMX request completes.
+	function doJMX(path, method, payload) {
 		if (method == null) {
 			method = "GET";
 		}
-		$.ajax({
-			method: method,
-			data: payload,
-			contentType: "application/json",
-			username: username,
-			password: password,
-			url: baseUrl + path,
-			success: function(data) {
-				callback(data);
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				debugger;
-			}
+		return new Promise(function(resolve, reject){
+			$.ajax({
+				method: method,
+				data: payload,
+				contentType: "application/json",
+				username: username,
+				password: password,
+				url: baseUrl + path,
+				success: function(data) {
+					resolve(data);
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+					reject(textStatus);
+				}
+			});
 		});
+		
 	}; // End of doJMX
 	
 	/**
@@ -55,17 +59,18 @@ var DSIJMX = (function() {
 		 * @memberOf dsi.DSIJMX
 		 * @description
 		 */
-		getSolutions: function(callback) {
-			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/attributes?attribute=Solutions", function(data){
-				var results = [];
-				var solnArray = data[0].value.value;
-				$.each(solnArray, function(index, value) {
-					results.push({name: value.name, version: value.currentVersion});
+		getSolutions: function() {
+			return new Promise(function(resolve, reject){
+				doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/attributes?attribute=Solutions").then(function(data){
+					var results = [];
+					var solnArray = data[0].value.value;
+					$.each(solnArray, function(index, value) {
+						results.push({name: value.name, version: value.currentVersion});
+					});
+					resolve(results);
 				});
-				if (callback != null) {
-					callback(results);
-				}
 			});
+
 		}, // End of getSolutions
 		
 		/**
@@ -75,12 +80,9 @@ var DSIJMX = (function() {
 		 * @memberOf dsi.DSIJMX
 		 * @description
 		 */
-		stopSolution: function(solutionName, callback) {
-			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/stopSolution", function(data) {
-				if (callback != null) {
-					callback();
-				}
-			}, "POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
+		stopSolution: function(solutionName) {
+			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/stopSolution",
+					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of stopSolution
 		
 		/**
@@ -90,28 +92,19 @@ var DSIJMX = (function() {
 		 * @memberOf dsi.DSIJMX
 		 * @description
 		 */
-		activateSolution: function(solutionName, callback) {
-			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/activateSolution", function(data) {
-				if (callback != null) {
-					callback();
-				}
-			}, "POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
+		activateSolution: function(solutionName) {
+			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/activateSolution",
+					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of activateSolution
 		
-		revertSolution: function(solutionName, callback) {
-			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/revertSolution", function(data) {
-				if (callback != null) {
-					callback();
-				}
-			}, "POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
+		revertSolution: function(solutionName) {
+			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/revertSolution",
+					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of revertSolution
 		
-		undeploySolution: function(solutionName, callback) {
-			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/undeploySolution", function(data) {
-				if (callback != null) {
-					callback();
-				}
-			}, "POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
+		undeploySolution: function(solutionName) {
+			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/undeploySolution",
+					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of undeploySolution
 		
 		/**
@@ -126,11 +119,11 @@ var DSIJMX = (function() {
 		 * See: https://www.ibm.com/support/knowledgecenter/SSQP76_8.8.0/com.ibm.odm.itoa.ref/html/api/html/com/ibm/ia/runtime/management/GlobalPropertiesMXBean.html
 		 */
 		listGlobalProperties: function(callback) {
-			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/listProperties", function(data) {
-				if (callback != null) {
-					callback(data.value);
-				}
-			}, "POST", toRESTJMXPayload([]));
+			return new Promise(function(resolve, reject){
+				doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/listProperties", "POST", toRESTJMXPayload([])).then(function(data) {
+					resolve(data.value);
+				});
+			});
 		}, // End of listGlobalProperties
 		
 		
@@ -142,13 +135,36 @@ var DSIJMX = (function() {
 		 * @description
 		 * Get a specific named global property.
 		 */
-		getGlobalProperty: function(propertyName, callback) {
-			doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/getProperty", function(data) {
-				debugger;
-				if (callback != null) {
-					callback();
-				}
-			}, "POST", toRESTJMXPayload([{ type: "String", value: propertyName }]));
-		} // End of getGlobalProperty
+		getGlobalProperty: function(propertyName) {
+			return 	doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DGlobalProperties/operations/getProperty",
+					"POST", toRESTJMXPayload([{ type: "String", value: propertyName }]));
+		}, // End of getGlobalProperty
+		
+		/**
+		 * @name DSIJMX#job_getJobRunIds
+		 * @function
+		 * @public
+		 * @memberOf dsi.DSIJMX 
+		 * @description
+		 */
+		// doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/attributes?attribute=Solutions"
+		job_getJobRunIds: function() {
+			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DJobManager/attributes?attribute=JobRunIds");
+		},
+		
+		job_getJobRunInfos: function() {
+			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DJobManager/attributes?attribute=JobRunInfos");
+		},
+		
+		
+		job_getQueuedJobs: function(solutionName) {
+			return 	doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DJobManager/operations/getQueuedJobs",
+					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
+		},
+		
+		job_getQueuedJobs: function(solutionName) {
+			return 	doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DJobManager/operations/getQueuedJobs",
+					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
+		},
 	};
 })();

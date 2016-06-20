@@ -9,11 +9,6 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 
-<!-- Alpaca -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.js"></script>
-<script src="lib/alpaca/jqueryui/alpaca.js"></script>
-<link rel="stylesheet" type="text/css" href="lib/alpaca/jqueryui/alpaca.css" />
-
 <!-- dataTables -->
 <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/dataTables.jqueryui.min.js"></script>
@@ -47,6 +42,8 @@
 <script type="text/javascript" src="src/DSIJMX.js"></script>
 <script type="text/javascript" src="src/DSIREST.js"></script>
 <script type="text/javascript" src="src/main.js"></script>
+<script type="text/javascript" src="src/FormBuilder.js"></script>
+
 
 <style>
 .ui-selectmenu-button {
@@ -110,10 +107,11 @@ div.dataTables_length {
 		<ul>
 			<li><a href="#solutionsTab">Solutions</a></li>
 			<li><a href="#entitiesTab">Entities</a></li>
-			<li><a href="#eventsTabs">Events</a></li>			
+			<li><a href="#eventsTab">Events</a></li>			
 			<li><a href="#globalPropertiesTab">Global Properties</a></li>
-			<li><a href="#mapTab">Map</a>
-			<li><a href="#logsTab">Logs</a>			
+			<li><a href="#jobsTab">Jobs</a></li>
+			<li><a href="#mapTab">Map</a></li>
+			<li><a href="#logsTab">Logs</a></li>			
 			<li><a href="#aboutTab">About</a></li>
 		</ul>
 <!--
@@ -140,12 +138,29 @@ div.dataTables_length {
 *** EVENTS ***
 
 -->			
-		<div id="eventsTabs">
+		<div id="eventsTab">
 			<div style="display: flex; flex-direction: column; height: 100%;">
-			Event:
-			<br />
-
-				<textarea id="eventData" rows=10 style="flex-grow:1; width: 100%; max-width: 100%; font-family: 'courier new'"></textarea>
+				<div id="eventEntryTabs">
+					<ul>
+						<li><a href="#eventEntryJSONTab">JSON</a></li>
+						<li><a href="#eventEntryFormTab">FORM</a></li>						
+					</ul>
+					<div id="eventEntryJSONTab">
+						Event:
+						<br />
+						<textarea id="eventData" rows=10 style="flex-grow:1; width: 100%; max-width: 100%; font-family: 'courier new'"></textarea>
+					</div>
+					<div id="eventEntryFormTab">
+						<label for="eventEntryFormTab_selectEvent">Event Type:</label>
+						<select id="eventEntryFormTab_selectEvent" style="width: 15em;">
+							<option>A</option>
+							<option>B</option>
+						</select>
+						<div id="eventForm">
+						</div>
+					</div>
+				</div>
+				
 				<div style="margin-top: 5px;">
 					<button id="sendEvent" style="margin-right: 20px;">Send</button>
 					<button id="eventHistory">History</button>
@@ -154,8 +169,6 @@ div.dataTables_length {
 				</div>
 				<div style="margin-top: 5px;">
 					<span id="eventMessage"></span>
-				</div>
-				<div id="eventForm">
 				</div>
 			</div>
 		</div>
@@ -198,19 +211,24 @@ div.dataTables_length {
 			<!-- <table id="entitiesTable"></table> -->
 
 		</div>
+		
 <!--
-
 *** GLOBAL PROPERTIES ***
-
 -->			
 		<div id="globalPropertiesTab">
 			<table id="globalProperties"></table>
 		</div>
 
 <!--
-
+*** JOBS ***
+-->
+		<div id="jobsTab">
+			<table id="runIdsTable"></table>
+			<button id="jobsRefreshButton">Refresh</button>
+		</div>
+		 
+<!--
 *** MAP ***
-
 -->	
 		<div id="mapTab" >
 		<div style="display: flex; flex-direction: column; height: 100%;">
