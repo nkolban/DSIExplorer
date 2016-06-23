@@ -4,6 +4,7 @@
 <meta charset="ISO-8859-1">
 <title>DSI Explorer</title>
 
+
 <link href="//code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" />
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
@@ -108,10 +109,10 @@ div.dataTables_length {
 			<li><a href="#solutionsTab">Solutions</a></li>
 			<li><a href="#entitiesTab">Entities</a></li>
 			<li><a href="#eventsTab">Events</a></li>			
+			<li><a href="#logsTab">Logs</a></li>	
+			<li><a href="#mapTab">Map</a></li>			
+			<li><a href="#aggregatesTab">Aggregates</a></li>	
 			<li><a href="#globalPropertiesTab">Global Properties</a></li>
-			<li><a href="#jobsTab">Jobs</a></li>
-			<li><a href="#mapTab">Map</a></li>
-			<li><a href="#logsTab">Logs</a></li>			
 			<li><a href="#aboutTab">About</a></li>
 		</ul>
 <!--
@@ -127,7 +128,8 @@ div.dataTables_length {
 				<div style="margin-top: 5px;">
 					<button id="stop"     class="dsi_enableOnSolution">Stop</button>
 					<button id="undeploy" class="dsi_enableOnSolution">Undeploy</button>
-					<button id="activate" class="dsi_enableOnSolution">Activate</button>			
+					<button id="activate" class="dsi_enableOnSolution">Activate</button>	
+					<button id="solutionPropertiesButton" class="dsi_enableOnSolution">Properties</button>		
 					<button id="refresh">Refresh</button>	
 					<input id="bomFileUpload" type="file" name="thefile" class="myHide">
 				</div>
@@ -220,9 +222,11 @@ div.dataTables_length {
 		</div>
 
 <!--
-*** JOBS ***
+*** AGGREGATES ***
 -->
-		<div id="jobsTab">
+		<div id="aggregatesTab">
+			<table id="aggregatesTable"></table>
+			<button id="aggregatesRefreshButton">Refresh</button>
 			<table id="runIdsTable"></table>
 			<button id="jobsRefreshButton">Refresh</button>
 		</div>
@@ -413,5 +417,11 @@ editHighlightDialog
 		</div>
 	</div>
 
+<!--
+solutionPropertiesDialog
+-->
+	<div id="solutionPropertiesDialog">
+		<table id="solutionPropertiesTable"></table>
+	</div>
 </body>
 </html>

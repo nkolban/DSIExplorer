@@ -136,7 +136,7 @@ var DSIREST = (function(){
 		 */
 		getEntity: function(solutionName, entityType, entityId) {
 			return this._doGET("/ibm/ia/rest/solutions/" + solutionName + "/entity-types/" + entityType + "/entities/" + entityId);
-		}, // End of getEntity
+		}, // End of getEntity  
 		
 		/**
 		 * @public
@@ -172,6 +172,14 @@ var DSIREST = (function(){
 		listSolutions: function() {
 			return this._doGET("/ibm/ia/rest/solutions");
 		}, // End of listSolutions
+		
+		/**
+		 * @name DSIREST#listAggregates
+		 * @returns
+		 */
+		listAggregates: function(solutionName) {
+			return this._doGET("/ibm/ia/rest/solutions/" + solutionName + "/aggregate");
+		},
 		
 		/**
 		 * @name DSIREST#setBaseURL

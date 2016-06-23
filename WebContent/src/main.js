@@ -149,7 +149,7 @@ $(function() {
     initMapTab();
     initLogsTab();
     initAboutTab();
-    initJobsTab();
+    initAggregatesTab();
 
 	/**
 	 * @private
@@ -168,7 +168,7 @@ $(function() {
 			}
 		};
 		// Iterate over each of the members of the current entity.
-		$.each(entity, function(name, propertyValue) {
+		$.each(entity, (name, propertyValue) => {
 			if (!name.startsWith("$")) {
 				entityNode.children.push({
 					icon: "images/field.png",
@@ -177,6 +177,7 @@ $(function() {
 					children: []
 				});
 			}
+			
 		}); // End of iteration over each of the members of the current entity
 		return  entityNode;
 	} // End of entityToTreeNode
@@ -653,25 +654,19 @@ $(function() {
 			icons: {primary: "ui-icon-stop"}
 		}).click(function() {
 			console.log("Stop! - selected: " + table.rows({selected: true}).count());
-			table.rows({selected: true}).every(function() {
-				console.log("Stopping: %O", this.data());
-				DSIJMX.stopSolution(this.data().name).then(function() {
-					refreshSolutions();
-				});
+			DSIJMX.solution_stopSolution(getSelectedSolution().name).then(function() {
+				refreshSolutions();
 			});
 		}); // End of stop button
 
 		
-// Handle the user clicking the activate button to activate a solution		
+// Handle the user clicking the activate button to activate a solution	 	
 		$("#activate").button({
 			icons: {primary: "ui-icon-play"}
 		}).click(function() {
 			console.log("Activate! - selected: " + table.rows({selected: true}).count());
-			table.rows({selected: true}).every(function() {
-				console.log("Activating: %O", this.data());
-				DSIJMX.activateSolution(this.data().name+"-0.0").then(function() {
-					refreshSolutions();
-				});
+			DSIJMX.solution_activateSolution(getSelectedSolution().name+"-0.0").then(function() {
+				refreshSolutions();
 			});
 		}); // End of activate button
 
@@ -679,15 +674,53 @@ $(function() {
 		$("#undeploy").button({
 			icons: {primary: "ui-icon-eject"}
 		}).click(function() {
-			console.log("Undeploy! - selected: " + table.rows({selected: true}).count());
-			table.rows({selected: true}).every(function() {
-				console.log("Undeploying: %O", this.data());
-				DSIJMX.undeploySolution(this.data().name + "-0.0").then(function() {
-					refreshSolutions();
-				});
+			DSIJMX.solution_undeploySolution(getSelectedSolution().name + "-0.0").then(function() {
+				refreshSolutions();
 			});
 		});
-
+		
+// Handle the user clicking the properties button
+		$("#solutionPropertiesButton").button().click(function() {
+			DSIJMX.solution_getProperties(getSelectedSolution().name).then(function(data) {
+				//debugger;
+			});
+			$("#solutionPropertiesDialog").dialog("open");
+		});
+		
+		$("#solutionPropertiesDialog").dialog({
+			autoOpen:  false,
+		    modal:     true,
+		    resizable: false,
+		    title:    "Solution Properties",
+		    buttons: [
+		      {
+			    text: "Add",
+				click: function() {    		  
+				}
+			  },
+		      {
+		         text: "Close",
+		    	 click: function() {
+		    	    $(this).dialog("close");
+		         }
+		      }
+		      ]
+		});
+		
+		$('#solutionPropertiesTable').DataTable({
+			"autoWidth": false,
+			"searching": false,
+			"scrollY":   "400px",
+			"paging":    false,
+			"info":      false,
+			"select":   'single',
+			"order":    [[0, 'asc']],
+			"columns": [
+			   { data: "name",  title: "Name" },
+			   { data: "value", title: "Value" }
+			]
+		});
+		
 // Handle the user clicking the refresh button to refresh the solutions		
 		$("#refresh").button({
 			icons: {primary: "ui-icon-refresh"}
@@ -1515,7 +1548,40 @@ $(function() {
 	 * @memberOf main
 	 * @function
 	 */
-	function initJobsTab() {
+	function initAggregatesTab() {
+		$('#aggregatesTable').DataTable({
+			"autoWidth": false,
+			"searching": false,
+			"scrollY":   "400px",
+			"paging":    false,
+			"info":      false,
+			"select":   'single',
+			"order":    [[0, 'asc']],
+			"columns": [
+			   { data: "name",  title: "Name" },
+			   { data: "value", title: "Value" }
+			]
+		});
+		
+		$("#aggregatesRefreshButton").button().click(function(){
+			var solution = getSelectedSolution();
+			if (solution === null) {
+				return;
+			}
+			DSIREST.listAggregates(solution.name).done(function(aggregateList) {
+				var tableData = [];
+				$.each(aggregateList, function(index, value) {
+					$.each(value, function(propertyName, propertyValue) {
+						if (propertyName.startsWith("defvar")) {
+							propertyName = propertyName.substr(6);
+						}
+						tableData.push({"name": propertyName, "value": propertyValue});
+					});
+				});
+				$('#aggregatesTable').DataTable().clear().rows.add(tableData).draw();
+			});
+		});
+		
 		$("#jobsRefreshButton").button().click(function() {
 			DSIJMX.job_getJobRunInfos().then(function(data){
 				$('#runIdsTable').DataTable().clear().rows.add(data[0].value.value).draw();

@@ -74,38 +74,43 @@ var DSIJMX = (function() {
 		}, // End of getSolutions
 		
 		/**
-		 * @name DSIJMX#stopSolution
+		 * @name DSIJMX#solution_stopSolution
 		 * @function
 		 * @public
 		 * @memberOf dsi.DSIJMX
 		 * @description
 		 */
-		stopSolution: function(solutionName) {
+		solution_stopSolution: function(solutionName) {
 			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/stopSolution",
 					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of stopSolution
 		
 		/**
-		 * @name DSIJMX#activateSolution
+		 * @name DSIJMX#solution_activateSolution
 		 * @function
 		 * @public
 		 * @memberOf dsi.DSIJMX
 		 * @description
 		 */
-		activateSolution: function(solutionName) {
+		solution_activateSolution: function(solutionName) {
 			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/activateSolution",
 					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of activateSolution
 		
-		revertSolution: function(solutionName) {
+		solution_revertSolution: function(solutionName) {
 			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/revertSolution",
 					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of revertSolution
 		
-		undeploySolution: function(solutionName) {
+		solution_undeploySolution: function(solutionName) {
 			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/undeploySolution",
 					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
 		}, // End of undeploySolution
+		
+		solution_getProperties: function(solutionName) {
+			return doJMX("/IBMJMXConnectorREST/mbeans/com.ibm.ia%3Atype%3DSolutions/operations/getProperties",
+					"POST", toRESTJMXPayload([{ type: "String", value: solutionName }]));
+		}, // End of solution_getProperties
 		
 		/**
 		 * @name DSIJMX#listGlobalProperties
