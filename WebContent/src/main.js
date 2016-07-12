@@ -107,7 +107,8 @@ $(function() {
 	    return value && JSON.parse(value);
 	};
 	
-	// Initialize the body of the page for the jQuery UI Layout control 
+	// Initialize the body of the page for the jQuery UI Layout control
+	/*
 	$('body').layout({
 		south__resizable: false,
 		south__closable: false,
@@ -116,6 +117,7 @@ $(function() {
 			$("#tabs").tabs("refresh");
 		}
 	});
+	*/
 	
 	//document.oncontextmenu = function() {return false;};
 	
@@ -574,7 +576,7 @@ $(function() {
 			   { data: "value", title: "Value" }
 			]
 		});
-		DSIJMX.listGlobalProperties().then(function(data) {
+		DSIJMX.listGlobalProperties().then((data)=> {
 			var values = [];
 			$.each(data, function(index, propertyName) {
 				values.push({ name: propertyName, value: "N/A"});
@@ -582,6 +584,18 @@ $(function() {
 				//DSIJMX.getGlobalProperty(propertyName, function() {});
 			});
 			$('#globalProperties').DataTable().clear().rows.add(values).draw();
+		});
+		
+		$("#globalPropertiesRefreshButton").button().click(()=>	{
+			DSIJMX.listGlobalProperties().then((data)=> {
+				var values = [];
+				$.each(data, function(index, propertyName) {
+					values.push({ name: propertyName, value: "N/A"});
+					// As of 2016-06-08 this doesn't work.  PMR 29569,004,000 has been raised.
+					DSIJMX.getGlobalProperty(propertyName, function() {});
+				});
+				$('#globalProperties').DataTable().clear().rows.add(values).draw();
+			});
 		});
 	} // End of initGlobalProperties
 	
@@ -1857,6 +1871,9 @@ $(function() {
 				if (property["$class"] == "Point") {
 					return "Point(" + property.coordinates[1] + "," + property.coordinates[0] + ")";
 				}
+				if (property["$class"] == "com.ibm.ia.model.Relationship") {
+					return "Relationship(key=" + property.key +", type=" + property.type + ")";
+				}
 			}
 				/*
 			    "location" : {
@@ -1864,6 +1881,7 @@ $(function() {
 			        "coordinates" : [30.0, 50.0]
 			      },
 			    */
+			debugger;
 			return "Unknown Object: " + property["$class"];
 		}
 		return "Unknown type";

@@ -1,26 +1,29 @@
 <!DOCTYPE html>
+<!--
+Uses packages:
+jquery.ui-contextmenu - https://github.com/mar10/jquery-ui-contextmenu
+jQuery-File-Upload - https://github.com/blueimp/jQuery-File-Upload
+gmaps - https://hpneo.github.io/gmaps/
+Google Maps
+dataTables - https://datatables.net/
+jstree - https://www.jstree.com/
+-->
 <html>
 <head>
 <meta charset="ISO-8859-1">
 <title>DSI Explorer</title>
 
+<script src="lib/jquery-3.0.0/jquery-3.0.0.js"></script>
 
-<link href="//code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" rel="stylesheet" type="text/css" />
+<link href="lib/jquery-ui-1.11.4.custom/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+<script src="lib/jquery-ui-1.11.4.custom/jquery-ui.min.js"></script>
 
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
-
-<!-- dataTables -->
-<script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/dataTables.jqueryui.min.js"></script>
-<script type="text/javascript" src="//cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
-<script type="text/javascript" src="//cdn.datatables.net/plug-ins/1.10.11/features/pageResize/dataTables.pageResize.min.js"></script>
-<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.11/css/dataTables.jqueryui.min.css"/>
-<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/select/1.1.2/css/select.jqueryui.min.css"/>
+<script type="text/javascript" src="lib/datatables/datatables.min.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/datatables/datatables.min.css"/>
 
 <!-- jstree -->
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstree/3.3.0/jstree.min.js"></script>
-<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/jstree/3.3.0/themes/default/style.min.css" />
+<script type="text/javascript" src="lib/jstree/jstree.min.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/jstree/themes/default/style.min.css" />
 
 <!-- jQuery-File-UpLoad -->
 <link rel="stylesheet" type="text/css" href="lib/jQuery-File-Upload-9.12.3/css/jquery.fileupload.css" />
@@ -30,10 +33,6 @@
 
 <!-- jquery-ui-contextmenu -->
 <script src="lib/jquery.ui-contextmenu/jquery.ui-contextmenu.js"></script>
-
-<!-- layout -->
-<link rel="stylesheet" type="text/css" href="lib/layout/layout-default.css" />
-<script src="lib/layout/jquery.layout.min.js"></script>
 
 <!-- gmaps -->
 <script type="text/javascript" src="//maps.google.com/maps/api/js"></script>
@@ -49,6 +48,11 @@
 <style>
 .ui-selectmenu-button {
 	vertical-align: middle;
+}
+
+html, body {
+	height: 100%;
+	margin: 0px;
 }
 
 .myBorder {
@@ -103,8 +107,8 @@ div.dataTables_length {
 
 </head>
 <body>
-	<div class="ui-layout-center">
-	<div id="tabs" class="ui-layout-content">
+	<div style="display:flex; flex-direction: column;  height: 100%;" class="ui-widget">
+	<div id="tabs" style="flex-grow: 1; padding: 0px;">
 		<ul>
 			<li><a href="#solutionsTab">Solutions</a></li>
 			<li><a href="#entitiesTab">Entities</a></li>
@@ -219,6 +223,7 @@ div.dataTables_length {
 -->			
 		<div id="globalPropertiesTab">
 			<table id="globalProperties"></table>
+			<button id="globalPropertiesRefreshButton">Refresh</button>
 		</div>
 
 <!--
@@ -294,12 +299,13 @@ div.dataTables_length {
 			<button id="settingsAbout">Settings</button>
 		</div>
 	</div>
-	</div> <!-- End of layout center -->
+		<!-- South content -->
+		<div style="text-align: right; margin: 8px;">
+		Selected solution: <span id="selectedSolutionLabel">None</span>, BOM loaded: <span id="bomLoadedLabel">No</span>
+	</div>
+	</div> <!-- End of flex parent -->
 	
-	<!-- South content -->
-	<div class="ui-layout-south ui-widget ui-widget-content" style="text-align: right;">
-	Selected solution: <span id="selectedSolutionLabel">None</span>, BOM loaded: <span id="bomLoadedLabel">No</span>
-	</div> <!--  End of ui-layout-south -->
+
 	
 	<!-- Dialogs -->
 	<div id="confirmReplace">

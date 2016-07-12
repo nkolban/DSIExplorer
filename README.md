@@ -26,3 +26,13 @@ We must also explicitly define an application entry in `server.xml` for `DSI_RES
 ```
 
 You may have to modify the `dir` entry to reflect your own local classpath.
+
+# Execution
+
+## Log demon
+The logs tab of DSIExplorer uses Web Socket technology to obtain the data from the DSI runtime.  Unfortunately, the DSI 8.8.0 runtime is incompatible
+with using Web Sockets and hence a separate demon is needed that will serve up the Web Socket data.  This demon is called `logServer.js` and is a
+node.js application.  This must be started prior to attempting to view log data.  In addition, since this is a separate server that makes its
+content available via https, the certificate of the server must be trusted.  The easiest way to achieve that is to browse to the server in a regular
+browser tab and accept the exception about the unknown certificate.  This browser can then be used as the host of DSIExplorer (at least until next
+restart).
