@@ -36,3 +36,21 @@ node.js application.  This must be started prior to attempting to view log data.
 content available via https, the certificate of the server must be trusted.  The easiest way to achieve that is to browse to the server in a regular
 browser tab and accept the exception about the unknown certificate.  This browser can then be used as the host of DSIExplorer (at least until next
 restart).
+
+## Launch URL
+The current launch URL for the package is:
+
+```
+https://localhost:9449/DSIExplorer/main.html
+```
+
+# Development
+
+During development, I used Eclipse as my environment for editing the DSIExplorer package.  This meant that the directory hosting the source was found
+in the Eclipse workspace directory.  For example: `C:\projects\DSIExplorer\WorkSpace\WebContent`.  I found that the task of making
+changes and redeploying those to a Liberty Server was taking too long.  A solution was to create a link from the Liberty `dropins` folder to
+the source directory of the DSIExplorer package:
+
+```
+C:> mklink /d C:\IBM\ODMInsights881\runtime\wlp\usr\servers\cisDev\dropins\DISExplorer.war C:\projects\DSIExplorer\WorkSpace\WebContent
+```

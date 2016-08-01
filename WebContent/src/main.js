@@ -1875,12 +1875,6 @@ $(function() {
 					return "Relationship(key=" + property.key +", type=" + property.type + ")";
 				}
 			}
-				/*
-			    "location" : {
-			        "$class" : "Point",
-			        "coordinates" : [30.0, 50.0]
-			      },
-			    */
 			debugger;
 			return "Unknown Object: " + property["$class"];
 		}
